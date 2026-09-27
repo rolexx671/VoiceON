@@ -1,115 +1,51 @@
 #!/bin/bash
+# Замена двух готовых версий проверяется в отдельной временной папке.
 set -euo pipefail
-
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-DIM='\033[2m'
-BOLD='\033[1m'
-NC='\033[0m'
-
-APP_DIR=~/Applications/OpenWispr.app
-SERVICE_LOG=/opt/homebrew/var/log/open-wispr.log
-
-step() { printf "\n${BOLD}==> %s${NC}\n" "$1"; }
-ok()   { printf "  ${GREEN}✓${NC} %s\n" "$1"; }
-info() { printf "  ${DIM}%s${NC}\n" "$1"; }
-fail() { printf "  ${RED}✗${NC} %s\n" "$1"; }
-
-build_and_install() {
-    local label="$1"
-    step "Building ($label)"
-    swift build -c release 2>&1 | tail -1
-
-    info "Bundling app..."
-    bash scripts/bundle-app.sh .build/release/open-wispr OpenWispr.app dev
-
-    info "Copying to ~/Applications (same as post_install)..."
-    mkdir -p ~/Applications
-    rm -rf "$APP_DIR"
-    cp -R OpenWispr.app "$APP_DIR"
-    rm -rf OpenWispr.app
-
-    /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister -f "$APP_DIR"
-    ok "Installed to $APP_DIR"
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+OLD_ARTIFACT="${1:-$REPO_DIR/dist/VoiceON.dmg}"
+NEW_ARTIFACT="${2:-$OLD_ARTIFACT}"
+TEST_DIR=$(mktemp -d /tmp/voiceon-upgrade-test.XXXXXX)
+MOUNTED_OLD=false
+MOUNTED_NEW=false
+cleanup() {
+    local test_exit_status=$?
+    if "$MOUNTED_NEW"; then hdiutil detach "$TEST_DIR/new-image" >/dev/null; fi
+    if "$MOUNTED_OLD"; then hdiutil detach "$TEST_DIR/old-image" >/dev/null; fi
+    rm -rf "$TEST_DIR"
+    exit "$test_exit_status"
 }
-
-wait_for_log() {
-    local pattern="$1"
-    local timeout="${2:-30}"
-    local elapsed=0
-    while [ $elapsed -lt "$timeout" ]; do
-        if grep -q "$pattern" "$SERVICE_LOG" 2>/dev/null; then
-            return 0
-        fi
-        sleep 1
-        elapsed=$((elapsed + 1))
-    done
-    return 1
+trap cleanup EXIT
+resolve_app() {
+    local artifact="$1" label="$2"
+    case "$artifact" in
+        *.dmg)
+            mkdir "$TEST_DIR/$label-image"
+            hdiutil attach -readonly -nobrowse -mountpoint "$TEST_DIR/$label-image" "$artifact" >/dev/null
+            if [ "$label" = old ]; then MOUNTED_OLD=true; else MOUNTED_NEW=true; fi
+            RESOLVED_APP="$TEST_DIR/$label-image/VoiceON.app"
+            ;;
+        *.app) RESOLVED_APP="$artifact" ;;
+        *) echo "Укажите два образа .dmg или два приложения .app." >&2; exit 1 ;;
+    esac
 }
-
-print_service_log() {
-    printf "\n  ${DIM}--- Service log (last 15 lines) ---${NC}\n"
-    tail -15 "$SERVICE_LOG" 2>/dev/null | sed 's/^/  /'
-    printf "  ${DIM}-----------------------------------${NC}\n"
-}
-
-# ── Phase 1: Establish baseline ──────────────────────────────────────
-step "Stopping any running instances"
-brew services stop open-wispr 2>/dev/null || true
-pkill -f "open-wispr start" 2>/dev/null || true
-sleep 1
-ok "Stopped"
-
-build_and_install "baseline"
-
-step "Starting via brew services (baseline)"
-true > "$SERVICE_LOG" 2>/dev/null || true
-brew services start open-wispr 2>/dev/null || true
-
-if wait_for_log "Ready\." 30; then
-    ok "App is ready"
-    print_service_log
+resolve_app "$OLD_ARTIFACT" old
+OLD_APP="$RESOLVED_APP"
+if [ "$NEW_ARTIFACT" = "$OLD_ARTIFACT" ]; then
+    NEW_APP="$OLD_APP"
 else
-    fail "App did not reach Ready state within 30s"
-    print_service_log
-    info "If waiting for permissions, grant them now and re-run."
-    exit 1
+    resolve_app "$NEW_ARTIFACT" new
+    NEW_APP="$RESOLVED_APP"
 fi
-
-brew services stop open-wispr 2>/dev/null || true
-sleep 1
-
-# ── Phase 2: Simulate upgrade ───────────────────────────────────────
-step "Simulating upgrade"
-info "Modifying source to produce a different binary..."
-VERSION_FILE="Sources/OpenWisprLib/Version.swift"
-cp "$VERSION_FILE" "${VERSION_FILE}.bak"
-printf 'public enum OpenWispr {\n    public static let version = "0.19.0-test"\n}\n' > "$VERSION_FILE"
-
-build_and_install "upgrade"
-
-mv "${VERSION_FILE}.bak" "$VERSION_FILE"
-
-step "Starting via brew services (upgrade)"
-true > "$SERVICE_LOG" 2>/dev/null || true
-brew services start open-wispr 2>/dev/null || true
-
-if wait_for_log "Ready\." 30; then
-    ok "App is ready"
-else
-    fail "App did not reach Ready state within 30s"
-    info "Check if it's waiting for permissions — that means the upgrade broke them."
-fi
-
-print_service_log
-
-# ── Results ──────────────────────────────────────────────────────────
-printf "\n${BOLD}What to check in the upgrade log:${NC}\n"
-printf "  - 'Accessibility: granted' without 'Waiting for' = permissions survived\n"
-printf "  - 'Waiting for Accessibility' = upgrade broke permissions (bad)\n"
-printf "  - 'upgrade detected' = binary hash change was detected\n"
-printf "\n"
-
-step "Cleaning up"
-brew services stop open-wispr 2>/dev/null || true
-ok "Done"
+bash "$REPO_DIR/scripts/test-install.sh" "$OLD_APP"
+bash "$REPO_DIR/scripts/test-install.sh" "$NEW_APP"
+mkdir "$TEST_DIR/Applications"
+ditto "$OLD_APP" "$TEST_DIR/Applications/VoiceON.app"
+# Удаляется только тестовая копия в каталоге, созданном выше через mktemp.
+rm -rf "$TEST_DIR/Applications/VoiceON.app"
+ditto "$NEW_APP" "$TEST_DIR/Applications/VoiceON.app"
+codesign --verify --deep --strict "$TEST_DIR/Applications/VoiceON.app"
+EXPECTED_VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$NEW_APP/Contents/Info.plist")
+ACTUAL_VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$TEST_DIR/Applications/VoiceON.app/Contents/Info.plist")
+[ "$ACTUAL_VERSION" = "$EXPECTED_VERSION" ] || { echo "Ошибка: после замены неверная версия." >&2; exit 1; }
+echo "Замена приложения успешно проверена. Итоговая версия: $ACTUAL_VERSION."
+echo "Сохранность разрешений macOS проверьте вручную после установки и первого запуска новой версии."

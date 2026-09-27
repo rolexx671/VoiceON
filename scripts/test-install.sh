@@ -1,303 +1,53 @@
 #!/bin/bash
-set -uo pipefail
-
+# Проверка готового автономного приложения без установки.
+set -euo pipefail
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+ARTIFACT="${1:-$REPO_DIR/dist/VoiceON.dmg}"
+TEST_DIR=$(mktemp -d /tmp/voiceon-install-test.XXXXXX)
+MOUNTED=false
+cleanup() {
+    local test_exit_status=$?
+    if "$MOUNTED"; then hdiutil detach "$TEST_DIR/image" >/dev/null; fi
+    rm -rf "$TEST_DIR"
+    exit "$test_exit_status"
+}
+trap cleanup EXIT
+case "$ARTIFACT" in
+    *.dmg)
+        mkdir "$TEST_DIR/image"
+        hdiutil attach -readonly -nobrowse -mountpoint "$TEST_DIR/image" "$ARTIFACT" >/dev/null
+        MOUNTED=true
+        APP="$TEST_DIR/image/VoiceON.app"
+        ;;
+    *.app) APP="$ARTIFACT" ;;
+    *) echo "Укажите путь к VoiceON.dmg или VoiceON.app." >&2; exit 1 ;;
+esac
+BIN="$APP/Contents/MacOS/voiceon"
+PLIST="$APP/Contents/Info.plist"
 PASS=0
-FAIL=0
-
-pass() { PASS=$((PASS + 1)); echo "  PASS: $1"; }
-fail() { FAIL=$((FAIL + 1)); echo "  FAIL: $1"; }
-
-INSTALLER_TRUST_TMPDIR=""
-
-cleanup_installer_trust() {
-    if [ -n "$INSTALLER_TRUST_TMPDIR" ]; then
-        rm -rf "$INSTALLER_TRUST_TMPDIR"
-    fi
-}
-
-check_output() {
+check() {
     local description="$1"
-    local pattern="$2"
-    shift 2
-    local output
-    output=$("$@" 2>&1 || true)
-    if echo "$output" | grep -q "$pattern"; then
-        pass "$description"
-    else
-        fail "$description"
-    fi
-}
-
-run_stubbed_installer() {
-    local failure_mode="$1"
     shift
-
-    PATH="$INSTALLER_TRUST_TMPDIR/bin:$PATH" \
-    HOME="$INSTALLER_TRUST_TMPDIR/home" \
-    OPEN_WISPR_TEST_TAP_DIR="$INSTALLER_TRUST_TMPDIR/tap" \
-    OPEN_WISPR_TEST_PREFIX_DIR="$INSTALLER_TRUST_TMPDIR/prefix" \
-    OPEN_WISPR_TEST_BREW_FAILURE="$failure_mode" \
-    bash scripts/install.sh "$@" 2>&1
+    if "$@"; then PASS=$((PASS + 1)); echo "  Пройдено: $description";
+    else echo "  Ошибка: $description" >&2; exit 1; fi
 }
-
-check_trust_failure_output() {
-    local description="$1"
-    local output="$2"
-    local status="$3"
-
-    if [ "$status" -eq 0 ]; then
-        fail "$description exits non-zero"
-    elif [[ "$output" == *$'\033'* || "$output" == *$'\r'* ]]; then
-        fail "$description keeps piped output free of terminal control sequences"
-    elif echo "$output" | grep -q "binary not found"; then
-        fail "$description does not fall through to binary-not-found"
-    elif ! echo "$output" | grep -q "tap is not trusted"; then
-        fail "$description explains Homebrew trust"
-    elif ! echo "$output" | grep -q -- "brew trust --formula human37/open-wispr/open-wispr"; then
-        fail "$description prints remediation command"
-    elif ! echo "$output" | grep -Fq -- "curl -fsSL https://raw.githubusercontent.com/human37/open-wispr/main/scripts/install.sh | bash"; then
-        fail "$description prints installer retry command"
-    else
-        pass "$description prints trust and retry commands without binary fallback"
-    fi
-}
-
-run_installer_trust_test() {
-    local output
-    local status
-
-    INSTALLER_TRUST_TMPDIR=$(mktemp -d /tmp/open-wispr-installer-trust.XXXXXX)
-
-    mkdir -p "$INSTALLER_TRUST_TMPDIR/bin" "$INSTALLER_TRUST_TMPDIR/home" "$INSTALLER_TRUST_TMPDIR/tap"
-
-    cat > "$INSTALLER_TRUST_TMPDIR/bin/uname" <<'STUB'
-#!/bin/bash
-if [ "${1:-}" = "-m" ]; then
-    echo "arm64"
-    exit 0
+check "Исполняемый файл VoiceON" test -x "$BIN"
+check "Встроенный движок распознавания" test -x "$APP/Contents/MacOS/whisper-cli"
+check "Встроенная базовая модель" test -s "$APP/Contents/Resources/models/ggml-base.bin"
+check "Встроенная модель определения речи" test -s "$APP/Contents/Resources/models/ggml-silero-v6.2.0.bin"
+check "Корректный Info.plist" plutil -lint "$PLIST"
+check "Идентификатор VoiceON" test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$PLIST")" = com.voiceon.app
+check "Русский язык приложения" test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDevelopmentRegion' "$PLIST")" = ru
+check "Целостность подписи" codesign --verify --deep --strict "$APP"
+"$BIN" --help > "$TEST_DIR/help.txt"
+check "Справка на русском" grep -q 'Голосовой ввод' "$TEST_DIR/help.txt"
+"$BIN" status > "$TEST_DIR/status.txt"
+check "Состояние на русском" grep -q 'Настройки:' "$TEST_DIR/status.txt"
+check "Движок доступен из приложения" grep -q 'whisper-cpp: да' "$TEST_DIR/status.txt"
+"$BIN" get-hotkey > "$TEST_DIR/hotkey.txt"
+check "Название клавиши на русском" grep -q 'Текущая клавиша:' "$TEST_DIR/hotkey.txt"
+if "$BIN" set-hotkey несуществующая-клавиша > "$TEST_DIR/error.txt" 2>&1; then
+    echo "Ошибка: несуществующая клавиша принята." >&2; exit 1
 fi
-exec /usr/bin/uname "$@"
-STUB
-
-    cat > "$INSTALLER_TRUST_TMPDIR/bin/brew" <<'STUB'
-#!/bin/bash
-set -u
-
-print_trust_error() {
-    echo "Error: Cannot install human37/open-wispr/open-wispr because its tap is not trusted" >&2
-    echo "To trust this formula, run:" >&2
-    echo "  brew trust --formula human37/open-wispr/open-wispr" >&2
-}
-
-case "${1:-}" in
-    list)
-        exit 1
-        ;;
-    tap)
-        exit 0
-        ;;
-    --repository)
-        if [ "${2:-}" = "human37/open-wispr" ]; then
-            echo "${OPEN_WISPR_TEST_TAP_DIR:?}"
-            exit 0
-        fi
-        ;;
-    install)
-        if [ "${2:-}" = "open-wispr" ]; then
-            case "${OPEN_WISPR_TEST_BREW_FAILURE:-install-trust}" in
-                install-trust)
-                    print_trust_error
-                    exit 1
-                    ;;
-                reinstall-trust)
-                    exit 0
-                    ;;
-                generic)
-                    echo "Error: failed to download bottle" >&2
-                    exit 1
-                    ;;
-            esac
-        fi
-        ;;
-    reinstall)
-        if [ "${2:-}" = "open-wispr" ]; then
-            case "${OPEN_WISPR_TEST_BREW_FAILURE:-install-trust}" in
-                reinstall-trust)
-                    print_trust_error
-                    exit 1
-                    ;;
-                generic)
-                    echo "Error: failed to download bottle" >&2
-                    exit 1
-                    ;;
-                *)
-                    exit 0
-                    ;;
-            esac
-        fi
-        ;;
-    --prefix)
-        if [ "${2:-}" = "open-wispr" ]; then
-            echo "${OPEN_WISPR_TEST_PREFIX_DIR:?}"
-            exit 0
-        fi
-        ;;
-esac
-
-echo "unexpected brew invocation: $*" >&2
-exit 1
-STUB
-
-    cat > "$INSTALLER_TRUST_TMPDIR/bin/git" <<'STUB'
-#!/bin/bash
-case " $* " in
-    *" log "*) echo "test-formula-commit" ;;
-esac
-exit 0
-STUB
-
-    chmod +x "$INSTALLER_TRUST_TMPDIR/bin/uname" "$INSTALLER_TRUST_TMPDIR/bin/brew" "$INSTALLER_TRUST_TMPDIR/bin/git"
-
-    output=$(run_stubbed_installer install-trust)
-    status=$?
-    check_trust_failure_output "installer trust error from brew install" "$output" "$status"
-
-    output=$(run_stubbed_installer reinstall-trust)
-    status=$?
-    check_trust_failure_output "installer trust error from brew reinstall" "$output" "$status"
-
-    output=$(run_stubbed_installer install-trust --version 1.2.3)
-    status=$?
-    if [ "$status" -eq 0 ] || ! echo "$output" | grep -Fq -- "| bash -s -- --version 1.2.3"; then
-        fail "installer retry preserves requested version"
-    else
-        pass "installer retry preserves requested version"
-    fi
-
-    output=$(run_stubbed_installer generic)
-    status=$?
-
-    if [ "$status" -eq 0 ]; then
-        fail "generic installer failure exits non-zero"
-    elif ! echo "$output" | grep -q "binary not found"; then
-        fail "generic installer failure keeps binary-not-found fallback"
-    elif echo "$output" | grep -q "brew trust"; then
-        fail "generic installer failure does not print trust remediation"
-    else
-        pass "generic installer failure keeps binary fallback"
-    fi
-
-    cleanup_installer_trust
-}
-
-if [ "${1:-}" = "--installer-trust" ]; then
-    echo "open-wispr installer trust test"
-    echo "-------------------------------"
-    run_installer_trust_test
-    echo ""
-    echo "-------------------------------"
-    echo "Results: $PASS passed, $FAIL failed"
-    [ "$FAIL" -eq 0 ] || exit 1
-    exit 0
-fi
-
-CONFIG_FILE="$HOME/.config/open-wispr/config.json"
-CONFIG_BACKUP=""
-
-backup_config() {
-    if [ -f "$CONFIG_FILE" ]; then
-        CONFIG_BACKUP=$(mktemp /tmp/open-wispr-config-backup.XXXXXX)
-        cp "$CONFIG_FILE" "$CONFIG_BACKUP"
-    fi
-}
-
-restore_config() {
-    if [ -n "$CONFIG_BACKUP" ] && [ -f "$CONFIG_BACKUP" ]; then
-        cp "$CONFIG_BACKUP" "$CONFIG_FILE"
-        rm -f "$CONFIG_BACKUP"
-    fi
-}
-
-echo "open-wispr install smoke tests"
-echo "-------------------------------"
-
-echo ""
-echo "Testing installer trust handling..."
-run_installer_trust_test
-
-echo ""
-echo "Building..."
-swift build -c release 2>&1 | tail -1
-
-BIN=".build/release/open-wispr"
-
-if [ -x "$BIN" ]; then
-    pass "Binary is executable"
-else
-    fail "Binary not found at $BIN"
-    exit 1
-fi
-
-check_output "--help shows usage" "Push-to-talk" "$BIN" --help
-check_output "status shows version" "open-wispr v" "$BIN" status
-check_output "status shows config path" "Config:" "$BIN" status
-check_output "status shows toggle mode" "Toggle:" "$BIN" status
-check_output "get-hotkey works" "Current hotkey:" "$BIN" get-hotkey
-
-backup_config
-trap restore_config EXIT
-
-check_output "set-hotkey f5 works" "Hotkey set to: f5" "$BIN" set-hotkey f5
-check_output "set-hotkey ctrl+space works" "Hotkey set to: ctrl+space" "$BIN" set-hotkey ctrl+space
-check_output "set-hotkey rejects invalid key" "Unknown key" "$BIN" set-hotkey invalidkey
-check_output "set-model rejects invalid model" "Unknown model" "$BIN" set-model fakemodel
-check_output "unknown command shows error" "Unknown command" "$BIN" badcommand
-
-restore_config
-trap - EXIT
-
-echo ""
-echo "Testing app bundle..."
-bash scripts/bundle-app.sh "$BIN" /tmp/OpenWisprTest.app 0.0.0-test
-
-if [ -x "/tmp/OpenWisprTest.app/Contents/MacOS/open-wispr" ]; then
-    pass "App bundle has executable"
-else
-    fail "App bundle missing executable"
-fi
-
-if [ -f "/tmp/OpenWisprTest.app/Contents/Info.plist" ]; then
-    pass "App bundle has Info.plist"
-else
-    fail "App bundle missing Info.plist"
-fi
-
-if grep -q "com.human37.open-wispr" /tmp/OpenWisprTest.app/Contents/Info.plist; then
-    pass "Info.plist has correct bundle ID"
-else
-    fail "Info.plist wrong bundle ID"
-fi
-
-rm -rf /tmp/OpenWisprTest.app
-
-if command -v shellcheck &>/dev/null; then
-    echo ""
-    echo "Shellcheck..."
-    for script in scripts/*.sh; do
-        if [ -f "$script" ]; then
-            if shellcheck --severity=warning "$script" 2>&1; then
-                pass "shellcheck $script"
-            else
-                fail "shellcheck $script"
-            fi
-        fi
-    done
-else
-    echo ""
-    echo "Shellcheck not installed, skipping (brew install shellcheck)"
-fi
-
-echo ""
-echo "-------------------------------"
-echo "Results: $PASS passed, $FAIL failed"
-[ "$FAIL" -eq 0 ] || exit 1
+check "Ошибка неизвестной клавиши на русском" grep -q 'неизвестная клавиша' "$TEST_DIR/error.txt"
+echo "Проверок пройдено: $PASS."

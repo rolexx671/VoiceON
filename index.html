@@ -1,102 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>open-wispr — Free Voice Dictation for macOS (100% Local, No Cloud)</title>
-  <meta name="description" content="The best free speech-to-text app for Mac. Hold a key, speak, release — text appears instantly. Powered by Whisper AI, runs 100% on-device. No cloud, no accounts, no subscription. Open source.">
-  <meta name="keywords" content="voice dictation, speech to text, macOS, whisper, on-device, privacy, open source, Apple Silicon, voice typing, dictation app">
-  <meta name="author" content="human37">
-  <link rel="canonical" href="https://open-wispr.com/">
-
+  <title>VoiceON — голосовой ввод на русском языке для macOS</title>
+  <meta name="description" content="Бесплатный голосовой ввод на русском языке для Mac с Apple Silicon. Удерживайте клавишу, говорите и отпустите: текст появится рядом с курсором. Распознавание работает локально, без подписки.">
+  <meta name="keywords" content="голосовой ввод, диктовка, русский язык, распознавание речи, macOS, Whisper, конфиденциальность, открытый исходный код, Apple Silicon">
+  <meta name="author" content="VoiceON; основано на open-wispr от human37">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://open-wispr.com/">
-  <meta property="og:title" content="open-wispr — Free Voice Dictation for macOS (100% Local)">
-  <meta property="og:description" content="The best free speech-to-text for Mac. Hold a key, speak, release — text appears instantly. Whisper AI, 100% on-device. No cloud, no subscription.">
-  <meta property="og:image" content="https://open-wispr.com/og.png">
-  <meta property="og:site_name" content="open-wispr">
-
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="open-wispr — Free Voice Dictation for macOS (100% Local)">
-  <meta name="twitter:description" content="The best free speech-to-text for Mac. Hold a key, speak, release — text appears instantly. Whisper AI, 100% on-device. No subscription.">
-  <meta name="twitter:image" content="https://open-wispr.com/og.png">
-
+  <meta property="og:title" content="VoiceON — голосовой ввод на русском языке для macOS">
+  <meta property="og:description" content="Русский интерфейс, локальное распознавание и установка из VoiceON.dmg. Многоязычная модель уже включена в приложение.">
+  <meta property="og:site_name" content="VoiceON">
+  <meta property="og:locale" content="ru_RU">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="VoiceON — голосовой ввод на русском языке">
+  <meta name="twitter:description" content="Удерживайте клавишу, говорите и отпустите. Распознавание работает на вашем Mac, без облака.">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "open-wispr",
-    "operatingSystem": "macOS",
+    "name": "VoiceON",
+    "operatingSystem": "macOS 13 и новее, Apple Silicon",
     "applicationCategory": "UtilitiesApplication",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-    "description": "Free, private voice-to-text for macOS. Powered by Whisper AI, runs entirely on-device.",
-    "url": "https://open-wispr.com/",
-    "downloadUrl": "https://open-wispr.com/#install",
-    "softwareVersion": "0.30.0",
-    "author": { "@type": "Organization", "name": "human37" },
+    "description": "Бесплатный голосовой ввод на русском языке для macOS. Распознавание Whisper выполняется локально.",
+    "url": "https://github.com/rolexx671/VoiceON",
+    "inLanguage": "ru",
+    "isBasedOn": "https://github.com/human37/open-wispr",
     "license": "https://opensource.org/licenses/MIT"
   }
   </script>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "Is open-wispr really free?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes, completely free and open source under the MIT license. No subscriptions, no usage limits, no premium tier."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Does any audio or text leave my computer?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "No. Everything runs 100% on-device. Audio is recorded to a temporary file, transcribed locally by Whisper, and the file is immediately deleted. There are zero network requests."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How does this compare to VoiceInk, Whisper Flow, or Superwhisper?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "open-wispr is the free, MIT-licensed alternative. VoiceInk ($39.99, GPLv3) is the closest — also open source and local — but adds AI features and custom dictionaries. Wispr Flow ($15/mo) uses cloud AI. Superwhisper ($8.49/mo) is local but closed-source. open-wispr gives you the same core push-to-talk Whisper experience with zero cost and the most permissive license."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What Macs are supported?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Any Mac with Apple Silicon (M1 or later) running macOS 13+. Whisper uses Metal GPU acceleration for fast inference. Intel Macs are not supported."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How accurate is it compared to Apple Dictation?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Significantly better. Whisper handles punctuation, technical jargon, code terms, and accented speech far more reliably than Apple's built-in dictation. It supports 99 languages."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Can I use it in any app?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes. open-wispr types transcribed text at your cursor position, so it works in any application — editors, browsers, terminals, Slack, email, and more."
-        }
-      }
-    ]
-  }
-  </script>
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
-  <link rel="icon" type="image/svg+xml" href="/logo.svg">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <meta name="color-scheme" content="light dark">
   <script>
     (function(){
@@ -107,8 +44,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,500;9..40,700;9..40,800&family=IBM+Plex+Mono:wght@400;500&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,500;9..40,700;9..40,800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"></noscript>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,500;9..40,700;9..40,800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -125,7 +61,7 @@
       --shadow-hover:1px 1px 0 var(--border);
       --bw:2px;
       --mono:'IBM Plex Mono',monospace;
-      --sans:'DM Sans',sans-serif;
+      --sans:'DM Sans',Arial,sans-serif;
       --nav-bg:rgba(253,252,248,.94);
       --code-bg:#F5F3EE;
       --subtle-border:#e5e5e5;
@@ -162,7 +98,7 @@
     a{color:var(--accent);text-decoration:none;font-weight:500}
     a:hover{text-decoration:underline;text-underline-offset:3px}
 
-    /* SHARED */
+    /* ОБЩИЕ СТИЛИ */
     .section-tag{
       font-size:11px;font-weight:500;text-transform:uppercase;
       letter-spacing:.12em;color:var(--accent);margin-bottom:16px;
@@ -187,7 +123,7 @@
     }
     .card-header span{opacity:.5}
 
-    /* NAV */
+    /* НАВИГАЦИЯ */
     nav{
       position:fixed;top:0;left:0;right:0;z-index:100;
       background:var(--nav-bg);
@@ -215,7 +151,7 @@
     }
     .nav-links a:hover{border-color:var(--accent);text-decoration:none}
 
-    /* HERO */
+    /* ГЛАВНЫЙ БЛОК */
     .hero{max-width:1200px;margin:0 auto;padding:96px 40px var(--sp)}
     .tag{
       display:inline-block;
@@ -289,7 +225,7 @@
       display:inline-flex;align-items:center;gap:5px;
     }
 
-    /* DEMO */
+    /* ДЕМОНСТРАЦИЯ */
     .demo-inline{margin-bottom:32px;max-width:680px}
     .demo-editor{
       padding:14px 0;height:68px;
@@ -328,7 +264,7 @@
     .demo-cursor.typing{animation:none;opacity:1}
     @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
-    /* STEPS */
+    /* ШАГИ */
     .how{max-width:1200px;margin:0 auto;padding:var(--sp) 40px}
     .steps-row{
       display:grid;grid-template-columns:repeat(3,1fr);gap:0;
@@ -349,7 +285,7 @@
     }
     .step-desc{font-size:13px;color:var(--muted);line-height:1.8}
 
-    /* COMPARE */
+    /* СВЕДЕНИЯ */
     .compare{max-width:1200px;margin:0 auto;padding:var(--sp) 40px}
     .compare-table{
       width:100%;border-collapse:collapse;
@@ -378,7 +314,7 @@
     .compare-table .muted{color:var(--muted)}
     .compare-table .price-free{color:var(--accent);font-weight:700}
 
-    /* INSTALL FLOW */
+    /* УСТАНОВКА */
     .flow{max-width:1200px;margin:0 auto;padding:var(--sp) 40px}
     .flow-steps{
       border:var(--bw) solid var(--border);box-shadow:var(--shadow);
@@ -401,7 +337,7 @@
       padding:2px 6px;font-size:12px;
     }
 
-    /* FEATURES */
+    /* ВОЗМОЖНОСТИ */
     .features{max-width:1200px;margin:0 auto;padding:var(--sp) 40px}
     .feature-grid{
       display:grid;grid-template-columns:repeat(3,1fr);gap:0;
@@ -425,7 +361,7 @@
       margin-right:8px;vertical-align:middle;
     }
 
-    /* CONFIG */
+    /* НАСТРОЙКИ */
     .config{max-width:1200px;margin:0 auto;padding:var(--sp) 40px}
     .config-example{
       border:var(--bw) solid var(--border);box-shadow:var(--shadow);
@@ -471,7 +407,7 @@
       padding:2px 6px;font-size:12px;
     }
 
-    /* TESTIMONIAL */
+    /* ОТЗЫВЫ */
     .testimonial{max-width:1200px;margin:0 auto;padding:var(--sp) 40px}
     .testimonial-grid{
       display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;
@@ -495,7 +431,7 @@
     }
     .testimonial-source a:hover{color:var(--fg)}
 
-    /* FAQ */
+    /* ВОПРОСЫ */
     .faq{max-width:1200px;margin:0 auto;padding:var(--sp) 40px}
     .faq-list{
       border:var(--bw) solid var(--border);box-shadow:var(--shadow);
@@ -518,7 +454,7 @@
       padding:0 28px 18px;font-size:13px;color:var(--muted);line-height:1.8;
     }
 
-    /* FOOTER */
+    /* ПОДВАЛ */
     footer{
       border-top:var(--bw) solid var(--border);
       max-width:1200px;margin:0 auto;padding:28px 40px;
@@ -571,12 +507,11 @@
       .install-body{flex-direction:column;align-items:stretch;gap:12px}
       .install-body code{font-size:11px;word-break:break-all;white-space:normal}
       .copy-btn{align-self:flex-start}
-      .demo-editor{height:90px}
+      .demo-editor{height:112px}
     }
   </style>
 </head>
 <body>
-
 <nav>
   <div class="nav-inner">
     <div class="logo">
@@ -590,20 +525,20 @@
           <rect x="26" y="-10" width="12" height="20" rx="4" fill="#fff"/>
         </g>
       </svg>
-      open-wispr
+      VoiceON
     </div>
     <div class="nav-right">
       <div class="nav-links" id="navLinks">
-        <a href="#features">Features</a>
-        <a href="#faq">FAQ</a>
-        <a href="#install">Install</a>
-        <a href="https://github.com/human37/open-wispr">GitHub</a>
+        <a href="#features">Возможности</a>
+        <a href="#faq">Вопросы</a>
+        <a href="#install">Установка</a>
+        <a href="https://github.com/rolexx671/VoiceON">Исходный код</a>
       </div>
-      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <button class="theme-toggle" id="themeToggle" aria-label="Сменить светлую или тёмную тему">
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
         <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
-      <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+      <button class="menu-toggle" id="menuToggle" aria-label="Открыть или закрыть меню">
         <svg class="icon-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
         <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
@@ -613,336 +548,115 @@
 
 <main>
 <section class="hero">
-  <h1>Voice to text, entirely on-device.</h1>
-
-  <p class="hero-sub">Hold a key, speak, release. Your words appear at the cursor. Powered by <a href="https://github.com/ggerganov/whisper.cpp">whisper.cpp</a> with Metal acceleration. 100% local — no cloud, no accounts, no telemetry. Free and open source under MIT.</p>
-
-  <div class="demo-inline">
+  <h1>Говорите по-русски.<br>Текст появится сам.</h1>
+  <p class="hero-sub">Удерживайте клавишу, говорите и отпустите. VoiceON вставит распознанный текст рядом с курсором. Русский интерфейс и модель уже включены в приложение. Распознавание на базе <a href="https://github.com/ggml-org/whisper.cpp">whisper.cpp</a> работает прямо на вашем Mac.</p>
+  <div class="demo-inline" aria-label="Пример распознанного текста">
     <div class="demo-editor">
       <span class="demo-hint" id="demoHint"></span><span class="demo-output"><span class="demo-text" id="demoText"></span><span class="demo-cursor" id="demoCursor"></span></span>
     </div>
   </div>
-
   <div id="install" class="install-block card">
-    <div class="card-header">
-      Install on Mac
-    </div>
+    <div class="card-header">Установка на Mac</div>
     <div class="install-body">
-      <code>curl -fsSL https://raw.githubusercontent.com/human37/open-wispr/main/scripts/install.sh | bash</code>
-      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent.trim());this.textContent='COPIED';setTimeout(()=>this.textContent='COPY',2000)">COPY</button>
+      <span>Откройте <strong>VoiceON.dmg</strong> и перенесите приложение в «Программы».</span>
+      <a class="copy-btn" href="https://github.com/rolexx671/VoiceON/releases">Выпуски VoiceON</a>
     </div>
   </div>
-
-  <div class="tip-row">
-    <span>Free & open source forever.</span>
-    <a href="https://buy.stripe.com/4gM5kC2AU0Ssd4l6Hqd7q00">Leave a tip &rarr;</a>
-  </div>
+  <div class="tip-row"><span>Бесплатно · Apple Silicon · macOS 13+</span><a href="https://github.com/rolexx671/VoiceON/blob/main/docs/install-guide.md">Инструкция &rarr;</a></div>
 </section>
 
 <section id="how" class="how">
-  <p class="section-tag">How it works</p>
-  <h2>Everything you need. Nothing you don't.</h2>
+  <p class="section-tag">Как это работает</p>
+  <h2>Три шага от голоса к тексту.</h2>
   <div class="steps-row">
-    <div class="step-card">
-      <div class="step-num">01</div>
-      <div class="step-title">Hold</div>
-      <div class="step-desc">Press and hold the Globe key. Recording starts instantly. A waveform animates in your menu bar.</div>
-    </div>
-    <div class="step-card">
-      <div class="step-num">02</div>
-      <div class="step-title">Speak</div>
-      <div class="step-desc">Talk naturally. Whisper runs on your GPU via Metal. No network latency, no cloud processing.</div>
-    </div>
-    <div class="step-card">
-      <div class="step-num">03</div>
-      <div class="step-title">Release</div>
-      <div class="step-desc">Let go. Transcribed text is typed at your cursor. Works in any app. The temp audio file is deleted.</div>
-    </div>
+    <div class="step-card"><div class="step-num">01</div><div class="step-title">Удерживайте</div><div class="step-desc">Нажмите клавишу 🌐 / fn и держите её. Значок звуковой волны в строке меню покажет, что идёт запись.</div></div>
+    <div class="step-card"><div class="step-num">02</div><div class="step-title">Говорите</div><div class="step-desc">Произнесите сообщение обычным голосом. Ваш Mac обрабатывает запись локально с ускорением Metal.</div></div>
+    <div class="step-card"><div class="step-num">03</div><div class="step-title">Отпустите</div><div class="step-desc">Дождитесь распознавания. Текст появится в выбранном поле, а если поле не выбрано — в буфере обмена.</div></div>
   </div>
 </section>
 
 <section class="compare">
-  <p class="section-tag">Compare</p>
-  <h2>Why open-wispr?</h2>
+  <p class="section-tag">О приложении</p>
+  <h2>Всё для русской диктовки.</h2>
   <table class="compare-table">
-    <thead>
-      <tr>
-        <th></th>
-        <th>open-wispr</th>
-        <th>VoiceInk</th>
-        <th>Wispr Flow</th>
-        <th>Superwhisper</th>
-        <th>MacWhisper</th>
-        <th>Apple Dictation</th>
-      </tr>
-    </thead>
+    <thead><tr><th>Возможность</th><th>VoiceON</th></tr></thead>
     <tbody>
-      <tr>
-        <td>Price</td>
-        <td class="price-free">Free forever</td>
-        <td>$39.99</td>
-        <td>$15/mo</td>
-        <td>$8.49/mo</td>
-        <td>$69 lifetime</td>
-        <td>Free</td>
-      </tr>
-      <tr>
-        <td>Open source</td>
-        <td class="check">MIT</td>
-        <td>GPLv3</td>
-        <td class="muted">No</td>
-        <td class="muted">No</td>
-        <td class="muted">No</td>
-        <td class="muted">No</td>
-      </tr>
-      <tr>
-        <td>100% on-device</td>
-        <td class="check">Yes</td>
-        <td class="check">Yes</td>
-        <td class="muted">No</td>
-        <td class="check">Yes</td>
-        <td class="check">Yes</td>
-        <td class="muted">Partial</td>
-      </tr>
-      <tr>
-        <td>Works in any app</td>
-        <td class="check">Yes</td>
-        <td class="check">Yes</td>
-        <td class="check">Yes</td>
-        <td class="check">Yes</td>
-        <td class="muted">Own app only</td>
-        <td class="check">Yes</td>
-      </tr>
-      <tr>
-        <td>Push-to-talk</td>
-        <td class="check">Yes</td>
-        <td class="check">Yes</td>
-        <td class="check">Yes</td>
-        <td class="check">Yes</td>
-        <td class="muted">No</td>
-        <td class="muted">No</td>
-      </tr>
-      <tr>
-        <td>Whisper engine</td>
-        <td class="check">Yes</td>
-        <td class="check">Yes</td>
-        <td class="muted">Cloud AI</td>
-        <td class="check">Yes</td>
-        <td class="check">Yes</td>
-        <td class="muted">Apple model</td>
-      </tr>
-      <tr>
-        <td>Account required</td>
-        <td class="check">No</td>
-        <td class="check">No</td>
-        <td class="muted">Yes</td>
-        <td class="muted">Yes</td>
-        <td class="check">No</td>
-        <td class="muted">Apple ID</td>
-      </tr>
-      <tr>
-        <td>AI features</td>
-        <td class="muted">No</td>
-        <td>AI assistant</td>
-        <td>AI rewriting</td>
-        <td>AI formatting</td>
-        <td class="muted">No</td>
-        <td class="muted">No</td>
-      </tr>
-      <tr>
-        <td>Languages</td>
-        <td>99</td>
-        <td>100+</td>
-        <td>100+</td>
-        <td>99</td>
-        <td>100+</td>
-        <td>60+</td>
-      </tr>
-      <tr>
-        <td>Install method</td>
-        <td>Homebrew</td>
-        <td>App Store</td>
-        <td>App Store</td>
-        <td>App Store</td>
-        <td>App Store</td>
-        <td>Built-in</td>
-      </tr>
+      <tr><td>Стоимость</td><td class="price-free">Бесплатно, без подписки</td></tr>
+      <tr><td>Интерфейс</td><td>На русском языке</td></tr>
+      <tr><td>Распознавание</td><td>На вашем Mac, без отправки записей в облако</td></tr>
+      <tr><td>Язык по умолчанию</td><td>Русский</td></tr>
+      <tr><td>Встроенная модель</td><td>Многоязычная базовая модель Whisper</td></tr>
+      <tr><td>Установка</td><td>VoiceON.dmg: перетащите приложение в «Программы»</td></tr>
+      <tr><td>Учётная запись</td><td>Не требуется</td></tr>
+      <tr><td>Исходный код</td><td>Открытый, лицензия MIT; основано на open-wispr</td></tr>
     </tbody>
   </table>
 </section>
 
 <section class="flow">
-  <p class="section-tag">Install flow</p>
-  <h2>Guided setup. Under a minute.</h2>
+  <p class="section-tag">Первый запуск</p>
+  <h2>Установите и разрешите доступ.</h2>
   <div class="flow-steps">
-    <div class="flow-step">
-      <div class="flow-num">01</div>
-      <div class="flow-text"><strong>Paste the install command.</strong> It taps the Homebrew formula and installs the binary. Everything downloads behind a spinner.</div>
-    </div>
-    <div class="flow-step">
-      <div class="flow-num">02</div>
-      <div class="flow-text"><strong>Grant Accessibility permission.</strong> The installer opens System Settings for you and waits. Toggle the switch, come back.</div>
-    </div>
-    <div class="flow-step">
-      <div class="flow-num">03</div>
-      <div class="flow-text"><strong>Grant Microphone permission.</strong> A system dialog appears. Click Allow. One time only.</div>
-    </div>
-    <div class="flow-step">
-      <div class="flow-num">04</div>
-      <div class="flow-text"><strong>Model downloads automatically.</strong> The default <code>base.en</code> model (142 MB) downloads on first launch. You can change this later.</div>
-    </div>
-    <div class="flow-step">
-      <div class="flow-num">05</div>
-      <div class="flow-text"><strong>Service starts.</strong> A waveform icon appears in your menu bar. Hold Globe, speak, release. Done.</div>
-    </div>
+    <div class="flow-step"><div class="flow-num">01</div><div class="flow-text"><strong>Откройте VoiceON.dmg.</strong> Перетащите VoiceON.app в папку «Программы» и запустите приложение оттуда.</div></div>
+    <div class="flow-step"><div class="flow-num">02</div><div class="flow-text"><strong>Разрешите универсальный доступ.</strong> В «Системные настройки» → «Конфиденциальность и безопасность» → «Универсальный доступ» включите VoiceON.</div></div>
+    <div class="flow-step"><div class="flow-num">03</div><div class="flow-text"><strong>Разрешите микрофон.</strong> Подтвердите системный запрос. Если ранее отказали, включите VoiceON в разделе «Микрофон» системных настроек.</div></div>
+    <div class="flow-step"><div class="flow-num">04</div><div class="flow-text"><strong>Модель уже готова.</strong> Многоязычная модель <code>base</code> включена в установочный образ. Для русской диктовки интернет не нужен.</div></div>
+    <div class="flow-step"><div class="flow-num">05</div><div class="flow-text"><strong>Начните диктовку.</strong> Поставьте курсор в текстовое поле, удерживайте 🌐 / fn, говорите и отпустите. Настройки доступны через значок звуковой волны в строке меню.</div></div>
   </div>
 </section>
 
 <section id="features" class="features">
-  <p class="section-tag">Features</p>
-  <h2>Nothing extra. Nothing missing.</h2>
+  <p class="section-tag">Возможности</p>
+  <h2>Приложение, которое вас понимает.</h2>
   <div class="feature-grid">
-    <div class="feature-cell">
-      <h3><span class="feature-marker"></span>Private</h3>
-      <p>Audio is recorded to a temp file, transcribed locally, and deleted. Zero network requests. No accounts, no telemetry, no cloud.</p>
-    </div>
-    <div class="feature-cell">
-      <h3><span class="feature-marker"></span>Fast</h3>
-      <p>Runs on Apple Silicon GPU via whisper.cpp and Metal. Transcription is real-time or faster on M1 and above.</p>
-    </div>
-    <div class="feature-cell">
-      <h3><span class="feature-marker"></span>Universal</h3>
-      <p>Text appears at your cursor in any app. Editors, browsers, terminals, Slack, email. Missed your focus? Copy Last Dictation from the menu bar.</p>
-    </div>
-    <div class="feature-cell">
-      <h3><span class="feature-marker"></span>Configurable</h3>
-      <p>Choose your hotkey, model size, and language. One command to change, one restart to apply. Everything in the terminal.</p>
-    </div>
-    <div class="feature-cell">
-      <h3><span class="feature-marker"></span>Multilingual</h3>
-      <p>Supports 99 languages via Whisper's multilingual models. Set an ISO 639-1 code in the config and use a non-.en model.</p>
-    </div>
-    <div class="feature-cell">
-      <h3><span class="feature-marker"></span>Lightweight</h3>
-      <p>No Electron. No app bundle to drag. Installs via Homebrew, runs as a background service. Sits quietly in your menu bar.</p>
-    </div>
+    <div class="feature-cell"><h3><span class="feature-marker"></span>На русском языке</h3><p>Меню, подсказки, сообщения и руководство переведены. Для русской речи уже выбраны подходящий язык и многоязычная модель.</p></div>
+    <div class="feature-cell"><h3><span class="feature-marker"></span>Локально</h3><p>Речь распознаётся на вашем Mac. По умолчанию история выключена, а временная запись удаляется после обработки.</p></div>
+    <div class="feature-cell"><h3><span class="feature-marker"></span>В привычных приложениях</h3><p>Диктуйте в заметках, редакторе, браузере или письме. Последний результат можно снова скопировать через меню VoiceON.</p></div>
+    <div class="feature-cell"><h3><span class="feature-marker"></span>С вашими настройками</h3><p>Выберите в меню клавишу диктовки, язык, модель и микрофон. Включите пунктуацию голосом, определение речи или хранение последних записей.</p></div>
+    <div class="feature-cell"><h3><span class="feature-marker"></span>С поддержкой других языков</h3><p>Многоязычные модели Whisper распознают речь на разных языках. Модели с суффиксом .en предназначены только для английского.</p></div>
+    <div class="feature-cell"><h3><span class="feature-marker"></span>Готово к работе</h3><p>Движок, библиотеки и базовая модель включены в VoiceON.app. Для установки готовой сборки не нужны Homebrew и Терминал.</p></div>
   </div>
 </section>
 
 <section class="config">
-  <p class="section-tag">Configuration</p>
-  <h2>One file. Eight options.</h2>
-  <div class="config-example">
-    <div class="card-header">~/.config/open-wispr/config.json</div>
-    <pre>{
-  "<b>hotkey</b>": { "<b>keyCode</b>": 63, "<b>modifiers</b>": [] },
-  "<b>modelSize</b>": "base.en",
-  "<b>language</b>": "en",
-  "<b>spokenPunctuation</b>": false,
-  "<b>maxRecordings</b>": 0,
-  "<b>toggleMode</b>": false
-}</pre>
-  </div>
+  <p class="section-tag">Настройки</p>
+  <h2>Всё под рукой, на русском языке.</h2>
+  <p class="config-note">Нажмите значок звуковой волны в строке меню. Основные настройки доступны сразу — открывать Терминал или редактировать файлы не требуется.</p>
   <table class="config-table">
-    <tr><th>Option</th><th>Default</th><th>Values</th></tr>
-    <tr>
-      <td>hotkey</td>
-      <td>63</td>
-      <td>Globe (63), Right Option (61), F5 (96), or any key code</td>
-    </tr>
-    <tr>
-      <td>modifiers</td>
-      <td>[]</td>
-      <td><code>cmd</code> <code>ctrl</code> <code>shift</code> <code>opt</code> &mdash; combine for chords</td>
-    </tr>
-    <tr>
-      <td>modelSize</td>
-      <td>"base.en"</td>
-      <td><code>tiny.en</code> 75 MB, fastest &middot; <code>base.en</code> 142 MB, good balance (default) &middot; <code>small.en</code> 466 MB, more accurate &middot; <code>medium.en</code> 1.5 GB, great accuracy &middot; <code>large-v3-turbo</code> 1.6 GB, fast multilingual &middot; <code>large-v3</code> 3 GB, best accuracy (M1 Pro+ recommended). Quantized <code>-q5_0</code>/<code>-q5_1</code>/<code>-q8_0</code> variants are also available at ~⅓&ndash;½ the size with minimal quality loss &mdash; see the README for the full table.</td>
-    </tr>
-    <tr>
-      <td>language</td>
-      <td>"en"</td>
-      <td>Any ISO 639-1 code. Use a non-.en model for other languages.</td>
-    </tr>
-    <tr>
-      <td>spokenPunctuation</td>
-      <td>false</td>
-      <td>Say "comma", "period", etc. to insert punctuation manually instead of auto-punctuation.</td>
-    </tr>
-    <tr>
-      <td>maxRecordings</td>
-      <td>0</td>
-      <td>Optionally store past recordings locally as <code>.wav</code> files for re-transcribing from the tray menu. 0 = nothing stored (default). Set 1-100 to keep that many recent recordings.</td>
-    </tr>
-    <tr>
-      <td>toggleMode</td>
-      <td>false</td>
-      <td>Press hotkey once to start recording, press again to stop. Default is hold-to-talk.</td>
-    </tr>
+    <tr><th>Пункт меню</th><th>По умолчанию</th><th>Что можно изменить</th></tr>
+    <tr><td>Клавиша диктовки</td><td>🌐 / fn</td><td>🌐 / fn, правая Option, F5 или Ctrl + пробел.</td></tr>
+    <tr><td>Язык речи</td><td>Русский</td><td>Выберите язык, на котором будете диктовать.</td></tr>
+    <tr><td>Модель</td><td>Базовая</td><td>Для русского языка выбирайте раздел «Многоязычные — подходят для русского». Более крупные модели требуют больше памяти.</td></tr>
+    <tr><td>Микрофон</td><td>Системный</td><td>Выберите конкретный микрофон или системное устройство по умолчанию.</td></tr>
+    <tr><td>Пунктуация голосом</td><td>Выключена</td><td>Произносите названия знаков препинания, например «запятая» и «точка».</td></tr>
+    <tr><td>Определение речи (VAD)</td><td>Выключено</td><td>Отфильтровывайте участки без речи. Необходимая модель уже включена в приложение.</td></tr>
+    <tr><td>Хранить последние записи</td><td>Не хранить</td><td>Сохраняйте 5, 10, 25, 50 или 100 записей для повторного распознавания через меню.</td></tr>
+    <tr><td>Запись по нажатию вместо удержания</td><td>Выключена</td><td>Одно нажатие начинает запись, второе завершает. При выключенной настройке клавишу нужно удерживать.</td></tr>
   </table>
-  <p class="config-note">Edit <code>~/.config/open-wispr/config.json</code>, then restart: <code>brew services restart open-wispr</code></p>
-</section>
-
-<section class="testimonial">
-  <p class="section-tag">What people say</p>
-  <div class="testimonial-grid">
-    <div class="testimonial-card">
-      <p class="testimonial-quote">"I use this with Claude Code every day. Hold the key, say what I want, and it just types it out. No more switching between keyboard and some dictation app. It's perfect for long prompts."</p>
-      <div class="testimonial-author">Tanner Thorne</div>
-      <div class="testimonial-role">Software Engineer</div>
-    </div>
-    <div class="testimonial-card">
-      <p class="testimonial-quote">"Been using this -- no sub, no fees, and it's been working just as well."</p>
-      <div class="testimonial-author">@traceyami, on switching from Wispr Flow</div>
-      <div class="testimonial-source"><a href="https://www.threads.com/@traceyami/post/DVztu4xEa0-" target="_blank" rel="noopener">via Threads</a></div>
-    </div>
-    <div class="testimonial-card">
-      <p class="testimonial-quote">"Free, fast, 'it just works' grade local voice typing for your Mac. Been using it a few days now."</p>
-      <div class="testimonial-author">Rajavanya Subramaniyan</div>
-      <div class="testimonial-source"><a href="https://www.linkedin.com/posts/rajavanya_open-wispr-free-voice-dictation-for-macos-activity-7435271462053236737-gQBE" target="_blank" rel="noopener">via LinkedIn</a></div>
-    </div>
-  </div>
+  <p class="config-note">В меню также доступны звуковые сигналы, подавление шума и эха и пользовательский словарь. <a href="https://github.com/rolexx671/VoiceON/blob/main/README.md#настройки">Все настройки и дополнительные параметры</a>.</p>
 </section>
 
 <section id="faq" class="faq">
-  <p class="section-tag">FAQ</p>
-  <h2>Common questions.</h2>
+  <p class="section-tag">Вопросы и ответы</p>
+  <h2>Что нужно знать.</h2>
   <div class="faq-list">
-    <details class="faq-item" open>
-      <summary>Is open-wispr really free?</summary>
-      <p>Yes, completely free and open source under the MIT license. No subscriptions, no usage limits, no premium tier. You can <a href="https://buy.stripe.com/4gM5kC2AU0Ssd4l6Hqd7q00">leave a tip</a> if you want to support development.</p>
-    </details>
-    <details class="faq-item">
-      <summary>Does any audio or text leave my computer?</summary>
-      <p>No. Everything runs 100% on-device. Audio goes to a temp file, transcribed locally by Whisper, then deleted immediately. There are zero network requests -- no cloud, no accounts, no telemetry. Optionally, you can configure open-wispr to store a number of past recordings locally via the <code>maxRecordings</code> setting. Those recordings stay private and on your machine, and we default to not storing anything.</p>
-    </details>
-    <details class="faq-item">
-      <summary>How does this compare to VoiceInk, Whisper Flow, or Superwhisper?</summary>
-      <p>open-wispr is the free, MIT-licensed alternative. VoiceInk ($39.99, GPLv3) is the closest — also open source and local — but adds AI features, custom dictionaries, and app-specific modes. Wispr Flow ($15/mo) uses cloud AI. Superwhisper ($8.49/mo) is local but closed-source. open-wispr gives you the same core experience — push-to-talk local dictation powered by Whisper — with zero cost, zero bloat, and the most permissive license.</p>
-    </details>
-    <details class="faq-item">
-      <summary>What Macs are supported?</summary>
-      <p>Any Mac with Apple Silicon (M1 or later) running macOS 13+. Whisper uses Metal GPU acceleration for fast inference. Intel Macs are not supported.</p>
-    </details>
-    <details class="faq-item">
-      <summary>How accurate is it compared to Apple Dictation?</summary>
-      <p>Significantly better. Whisper handles punctuation, technical jargon, code terms, and accented speech far more reliably than Apple's built-in dictation. It supports 99 languages and produces properly punctuated output by default.</p>
-    </details>
-    <details class="faq-item">
-      <summary>Can I use it in any app?</summary>
-      <p>Yes. open-wispr types transcribed text at your cursor position, so it works in any application — editors, browsers, terminals, Slack, email, and more. No plugins or integrations required.</p>
-    </details>
+    <details class="faq-item" open><summary>VoiceON бесплатный?</summary><p>Да. Приложение распространяется бесплатно по лицензии MIT. Подписка и регистрация не требуются. VoiceON основан на открытом проекте <a href="https://github.com/human37/open-wispr">open-wispr</a>.</p></details>
+    <details class="faq-item"><summary>Нужен ли интернет?</summary><p>Для русской диктовки со встроенной моделью интернет не нужен. Звук и распознанный текст остаются на вашем Mac. Подключение потребуется для загрузки дополнительных моделей распознавания. Модель определения речи уже включена в готовую сборку.</p></details>
+    <details class="faq-item"><summary>На каких компьютерах работает сборка?</summary><p>На Mac с процессором Apple Silicon — M1 или новее — и macOS 13 Ventura или новее. Готовый установочный образ не предназначен для Intel Mac.</p></details>
+    <details class="faq-item"><summary>Зачем разрешение универсального доступа?</summary><p>Чтобы VoiceON мог реагировать на клавишу диктовки в других приложениях и вставлять распознанный текст. Доступ к микрофону нужен для записи речи.</p></details>
+    <details class="faq-item"><summary>Почему клавиша 🌐 открывает эмодзи?</summary><p>Откройте «Системные настройки» → «Клавиатура» и выберите «Ничего не делать» для действия при нажатии клавиши 🌐. После этого используйте её для диктовки.</p></details>
+    <details class="faq-item"><summary>Как улучшить распознавание русской речи?</summary><p>Проверьте, что выбран русский язык и многоязычная модель без суффикса .en. Уменьшите фоновый шум или попробуйте более крупную модель. Результат зависит от микрофона, речи и условий записи.</p></details>
+    <details class="faq-item"><summary>Что делать, если текст не вставился?</summary><p>Выберите в меню VoiceON копирование последней диктовки и вставьте результат сочетанием ⌘V. Также проверьте разрешение универсального доступа и выбранное текстовое поле. Некоторые защищённые поля ограничивают автоматическую вставку.</p></details>
   </div>
 </section>
 </main>
 
 <footer>
-  <p>&copy; <script>document.write(new Date().getFullYear())</script> Ammon Taylor / MIT License</p>
+  <p>VoiceON · Основано на open-wispr © 2026 human37 · Лицензия MIT</p>
   <div class="footer-links">
-    <a href="https://github.com/human37/open-wispr">Source</a>
-    <a href="https://github.com/human37/open-wispr/issues">Issues</a>
-    <a href="https://buy.stripe.com/4gM5kC2AU0Ssd4l6Hqd7q00">Tip</a>
+    <a href="https://github.com/rolexx671/VoiceON">Исходный код</a>
+    <a href="https://github.com/rolexx671/VoiceON/issues">Сообщить об ошибке</a>
+    <a href="https://github.com/rolexx671/VoiceON/blob/main/docs/install-guide.md">Помощь</a>
   </div>
 </footer>
 
@@ -953,16 +667,12 @@
   var text=document.getElementById('demoText');
   var cursor=document.getElementById('demoCursor');
   var phrases=[
-    "Jesse, we need to refactor the authentication module. Use JWT tokens, not session cookies.",
-    "The batch purity is at 96%, but the API response times are still too slow. Add Redis caching.",
-    "Gus wants the deployment pipeline locked down. Add branch protection rules and require two approvals.",
-    "I am the one who writes the database migrations. Add an index on the created_at column.",
-    "We need to cook up a WebSocket connection for real-time order tracking. Use exponential backoff on reconnect.",
-    "Saul says the client wants rate limiting on all public endpoints. Use a sliding window algorithm, 100 requests per minute.",
-    "Jesse, stop pushing directly to main. Set up a CI pipeline that runs linting and tests before merge.",
-    "The carwash needs a new frontend. Migrate the dashboard from JavaScript to TypeScript, and add strict mode.",
-    "Hank keeps running the wrong queries. Write integration tests for the payment processing pipeline.",
-    "Say my name. Then refactor the GraphQL schema to support nullable fields and add proper error handling."
+    "Привет! Давай встретимся завтра после обеда и обсудим планы на неделю.",
+    "Запиши, пожалуйста: купить молоко, хлеб и яблоки по дороге домой.",
+    "Спасибо за письмо. Я посмотрю документы и отвечу вам сегодня вечером.",
+    "Голосовой ввод помогает записывать мысли, пока они не забылись.",
+    "В пятницу отправимся за город. Надеюсь, будет хорошая погода.",
+    "Добавь в заметки: проверить расписание и подготовить материалы к встрече."
   ];
   var last=-1;
   var timer;
@@ -977,7 +687,7 @@
   function run(){
     var phrase=pick();
     var words=phrase.split(' ');
-    hint.innerHTML='<div class="waveform"><span></span><span></span><span></span><span></span><span></span></div> listening...';
+    hint.innerHTML='<div class="waveform"><span></span><span></span><span></span><span></span><span></span></div> Слушаю…';
     text.textContent='';
     output.classList.remove('visible');
     cursor.classList.remove('typing');
@@ -1035,6 +745,5 @@
 })();
 </script>
 
-<!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "23bacaa8766746dea24c49a09a203f65"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>

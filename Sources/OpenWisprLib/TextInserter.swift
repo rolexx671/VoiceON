@@ -78,8 +78,8 @@ class TextInserter {
     @discardableResult
     func insert(text: String) -> InsertionResult {
         let pasteboard = pasteboardProvider()
-        // A failed accessibility query is inconclusive; preserve the existing
-        // paste behavior rather than silently routing text to the clipboard.
+        // Ошибка запроса универсального доступа не даёт однозначного ответа:
+        // сохраняем обычное поведение вставки текста.
         let shouldPaste = focusedTextInputProvider() != false
         let savedItems = shouldPaste ? savePasteboard(pasteboard) : []
 
@@ -92,8 +92,8 @@ class TextInserter {
         pasteAction(pasteKeyCode)
 
         scheduleRestore(restoreDelay) {
-            // If something else has written to the pasteboard since our write
-            // (user copied something, another tool wrote), do not clobber it.
+            // Если после нашей записи буфер обмена изменился
+            // (пользователь скопировал текст или другая программа записала данные), не затираем его.
             guard pasteboard.changeCount == writeChangeCount else { return }
             self.restorePasteboard(pasteboard, items: savedItems)
         }
@@ -130,8 +130,8 @@ class TextInserter {
             return true
         }
 
-        // Custom editors may use other roles. Keep pasting unless the focused
-        // role is clearly not a text input.
+        // Нестандартные редакторы могут использовать другие роли. Продолжаем вставку,
+        // если роль элемента явно не исключает ввод текста.
         if role == (kAXButtonRole as String)
             || role == (kAXCheckBoxRole as String)
             || role == (kAXRadioButtonRole as String)

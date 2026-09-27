@@ -1,142 +1,135 @@
-# Contributing
+# Участие в разработке VoiceON
 
-Thanks for your interest in contributing to open-wispr.
+VoiceON — русская версия [human37/open-wispr](https://github.com/human37/open-wispr). Репозиторий русской версии: [rolexx671/VoiceON](https://github.com/rolexx671/VoiceON). Исходное авторство и лицензия MIT сохраняются.
 
-## Getting started
+## Начало работы
 
-1. Fork the repo and clone it
-2. Run the dev script:
-   ```bash
-   bash scripts/dev.sh
-   ```
+Для разработки нужен Mac с Apple Silicon, macOS 13 или новее и установленными инструментами разработчика Apple. Для локального выполнения `swift test` нужен полный Xcode с XCTest; одних Command Line Tools может быть недостаточно. Готовый VoiceON.dmg предназначен для обычной установки без инструментов разработчика.
 
-The dev script handles everything you need to build and run from source:
-
-1. **Configure** -- prompts you to pick a Whisper model size (tiny through medium, English-only or multilingual), language, spoken punctuation, and hotkey. Press enter on any prompt to keep the current value from `~/.config/open-wispr/config.json`.
-2. **Clean up** -- stops any running open-wispr instances and removes the Homebrew-installed version (if present) so it doesn't conflict with your local build. Installs `whisper-cpp` via Homebrew if needed.
-3. **Build** -- runs `swift build -c release` from source.
-4. **Bundle** -- packages the binary into a macOS app bundle (`OpenWispr.app`) and copies it to `~/Applications/` so macOS properly recognizes it for accessibility and microphone permissions.
-5. **Start** -- launches the app directly so you can test immediately.
-
-## Project structure
-
+```bash
+git clone https://github.com/rolexx671/VoiceON.git
+cd VoiceON
+swift build -c release
+swift test
 ```
+
+Собрать установочный образ со встроенным распознаванием:
+
+```bash
+bash scripts/build-dmg.sh
+```
+
+Итоговый файл: `dist/VoiceON.dmg`. В образ входит `VoiceON.app`, статически собранный движок `whisper-cli`, многоязычная модель `base` и модель определения речи Silero. Начальная загрузка зависимостей и моделей для сборки требует интернета.
+
+Внутреннее имя исполняемой цели Swift остаётся `open-wispr` для совместимости с исходным проектом. В готовом приложении исполняемый файл называется `voiceon` и находится в `VoiceON.app/Contents/MacOS/`. Идентификатор приложения — `com.voiceon.app`.
+
+Для локальной разработки также есть сценарий:
+
+```bash
+bash scripts/dev.sh
+```
+
+Прочитайте его перед запуском: сценарий настраивает модель, язык и горячую клавишу, останавливает ранее запущенные экземпляры, собирает приложение и устанавливает его в пользовательскую папку приложений. В отличие от готового образа, вспомогательные сценарии разработки могут использовать Homebrew для установки зависимостей.
+
+## Проверка готового приложения через Терминал
+
+Для распознавания существующего WAV-файла:
+
+```bash
+/Applications/VoiceON.app/Contents/MacOS/voiceon transcribe /путь/к/записи.wav
+```
+
+Замените путь к файлу на свой. Команда использует настроенную модель и язык; она удобна для проверки встроенного движка отдельно от горячей клавиши и разрешения на микрофон.
+
+## Структура проекта
+
+```text
 Sources/OpenWisprLib/
-├── AppDelegate.swift       # App lifecycle, hotkey listener, menu bar
-├── AudioRecorder.swift     # Microphone recording
-├── Config.swift            # Config loading/saving (~/.config/open-wispr/config.json)
-├── HotkeyManager.swift     # Global hotkey detection via CGEvent taps
-├── KeyCodes.swift          # Key name/code mapping and parsing
-├── ModelDownloader.swift   # Whisper model download from HuggingFace
-├── Permissions.swift       # Microphone and accessibility permission checks
-├── RecordingStore.swift    # Recording history and pruning
-├── StatusBarController.swift # Menu bar UI
-├── TextInserter.swift      # Pastes transcribed text at cursor
-├── TextPostProcessor.swift # Spoken punctuation replacement
-├── Transcriber.swift       # Whisper CLI wrapper
-└── Version.swift           # Version constant
+├── AppDelegate.swift          # Жизненный цикл, горячие клавиши и состояние приложения
+├── AudioRecorder.swift        # Запись с микрофона
+├── Config.swift               # Чтение и сохранение настроек
+├── HotkeyManager.swift        # Глобальное отслеживание клавиш
+├── KeyCodes.swift             # Названия и коды клавиш
+├── ModelDownloader.swift      # Загрузка моделей Whisper
+├── Permissions.swift          # Проверка системных разрешений
+├── RecordingStore.swift       # История записей и очистка
+├── StatusBarController.swift  # Меню и значок в строке меню
+├── TextInserter.swift         # Вставка распознанного текста
+├── TextPostProcessor.swift    # Обработка названий знаков препинания
+├── Transcriber.swift          # Запуск whisper-cli
+└── Version.swift              # Версия приложения
 Sources/OpenWispr/
-└── main.swift              # CLI entry point
+└── main.swift                 # Команды для Терминала
+Tests/OpenWisprTests/          # Модульные тесты
 scripts/
-├── dev.sh                  # Build & run from source
-├── install.sh              # Guided installer
-├── uninstall.sh            # Clean removal
-├── deploy.sh               # Release automation
-├── bundle-app.sh           # Create macOS .app bundle
-├── test-install.sh         # Install smoke tests
-└── test-transcription.sh   # Transcription integration tests
+├── build-dmg.sh               # Создание готового VoiceON.dmg
+├── bundle-app.sh              # Создание приложения macOS
+├── dev.sh                     # Сборка и запуск для разработки
+├── install.sh                 # Вспомогательная установка из исходного дерева
+├── uninstall.sh               # Вспомогательное удаление
+├── deploy.sh                  # Подготовка выпуска
+├── test-install.sh            # Проверка установки и команд
+└── test-transcription.sh      # Проверка распознавания
 ```
 
-## Tests
+Пользовательские настройки хранятся в `~/.config/voiceon/config.json`, дополнительные модели — в `~/.config/voiceon/models/`.
 
-All changes should include applicable tests. The test suite has two layers:
+## Проверки
 
-### Unit tests
-
-Location: `Tests/OpenWisprTests/`
-
-Pure logic tests with no external dependencies. Run with:
+### Модульные тесты
 
 ```bash
 swift test
 ```
 
-| File | What it covers |
+Тесты в `Tests/OpenWisprTests/` проверяют логику, не требующую микрофона, окна приложения или системных разрешений.
+
+| Файл | Что проверяется |
 |---|---|
-| `ConfigTests.swift` | Config decoding, `effectiveMaxRecordings` clamping, `FlexBool` parsing, `HotkeyConfig` modifier flags |
-| `RecordingStoreTests.swift` | Recording file creation, listing, sorting, pruning, deletion |
-| `TextPostProcessorTests.swift` | Spoken punctuation replacement, spacing fixes, edge cases |
-| `KeyCodesTests.swift` | Key name/code mapping, `parse()`, `describe()`, round-trip consistency |
+| `ConfigTests.swift` | Чтение настроек, ограничения истории, логические значения и модификаторы клавиш |
+| `RecordingStoreTests.swift` | Создание, сортировка, хранение и удаление записей |
+| `TextPostProcessorTests.swift` | Замена произнесённых знаков препинания и обработка пробелов |
+| `KeyCodesTests.swift` | Соответствие названий и кодов клавиш, разбор и описание сочетаний |
 
-When adding new logic to `OpenWisprLib`, add unit tests here. Good candidates for unit tests are pure functions, data transformations, parsing, and anything that doesn't require hardware (microphone, display, accessibility).
+Для новых правил русской пунктуации добавляйте примеры с кириллицей, регистром, соседними знаками и обычными словами, которые не должны заменяться.
 
-### Integration tests
-
-Location: `scripts/test-install.sh` and `scripts/test-transcription.sh`
-
-These test the built binary and external dependencies. They run in CI but you can also run them locally:
+### Проверка приложения и распознавания
 
 ```bash
-# Install smoke test -- builds from source, tests CLI commands, bundles app, runs shellcheck
 bash scripts/test-install.sh
-
-# Transcription test -- requires whisper-cpp and downloads the tiny.en model (~75 MB)
 bash scripts/test-transcription.sh
 ```
 
-**Install smoke test** (`test-install.sh`):
-- Builds from source and verifies the binary
-- Tests all CLI commands (`--help`, `status`, `get-hotkey`, `set-hotkey`, `set-model`)
-- Validates error handling for invalid inputs
-- Bundles the app and checks the `.app` structure
-- Runs shellcheck on all shell scripts
+Первая проверка собирает исполняемый файл, проверяет команды и ошибки, структуру приложения и сценарии оболочки. Вторая использует системное синтезирование речи и `whisper-cli`; ей могут потребоваться внешние зависимости и загрузка тестовой модели. Автоматическое распознавание синтезированной речи не заменяет ручную проверку русской диктовки с микрофона.
 
-**Transcription test** (`test-transcription.sh`):
-- Generates test audio using macOS `say` + `afconvert`
-- Runs whisper-cpp on the generated audio
-- Verifies transcription output contains expected words
-- Tests the binary's whisper-cpp detection
+После изменения разрешений, аудиозаписи или горячих клавиш проверьте приложение вручную на Mac:
 
-### CI
+1. Запуск установленного приложения и отображение русского меню.
+2. Запрос разрешения микрофона и работа с разрешением универсального доступа.
+3. Начало и завершение записи выбранной клавишей.
+4. Распознавание русской фразы и вставка в обычное текстовое поле.
+5. Копирование последней диктовки и поведение без выбранного поля.
+6. Работа встроенной модели без сети.
 
-CI runs automatically on pull requests via GitHub Actions (`.github/workflows/ci.yml`). Four jobs run in parallel:
+Автоматические проверки GitHub Actions описаны в `.github/workflows/ci.yml`. Сопоставляйте успешные проверки с фактически изменёнными компонентами: сборка сама по себе не подтверждает работу микрофона или вставки в другие приложения.
 
-1. **build** -- `swift build -c release` (skipped if no Swift files changed)
-2. **unit-tests** -- `swift test` (skipped if no Swift files changed)
-3. **install-test** -- builds binary, tests CLI, bundles app, shellcheck
-4. **transcription-test** -- installs whisper-cpp, builds, runs transcription tests
+## Порядок изменений
 
-### Adding tests
+1. Создайте ветку от `main`.
+2. Внесите необходимые изменения, сохранив совместимость настроек.
+3. Выполните проверки, соответствующие изменённой логике.
+4. Проверьте русские подписи и сообщения в приложении.
+5. Откройте запрос на включение изменений в репозитории VoiceON; укажите результат, способ проверки и известные ограничения.
 
-- **New pure logic** (parsing, transformations, config handling) -- add a unit test in `Tests/OpenWisprTests/`
-- **New CLI commands** -- add assertions to `scripts/test-install.sh`
-- **Changes to transcription pipeline** -- add cases to `scripts/test-transcription.sh`
-- **New shell scripts** -- add the script path to the shellcheck list in `test-install.sh`
+Сообщения об ошибках и предложения оставляйте в [разделе задач VoiceON](https://github.com/rolexx671/VoiceON/issues). Исходный проект и его задачи находятся в [human37/open-wispr](https://github.com/human37/open-wispr).
 
-## Making changes
+## Принципы
 
-1. Create a branch off `main`
-2. Make your changes
-3. Run the tests:
-   ```bash
-   swift test
-   bash scripts/test-install.sh
-   ```
-4. Test locally with `bash scripts/dev.sh`
-5. Open a pull request against `main`
+- Пользовательский интерфейс, ошибки, подсказки и документация должны быть понятны человеку, не знающему английского.
+- Технические имена параметров JSON, системных API, команд, файлов и моделей не переводятся, если это нарушает совместимость.
+- Распознавание и обработка пользовательских записей выполняются локально.
+- Готовая сборка должна содержать зависимости, необходимые для русской диктовки.
+- Избегайте лишних зависимостей и сохраняйте существующий стиль кода.
+- Сохраняйте авторство исходного проекта и уведомления о лицензиях сторонних компонентов.
 
-## What to work on
-
-Check the [open issues](https://github.com/human37/open-wispr/issues) for bugs and feature requests. The [roadmap](https://github.com/users/human37/projects/2) shows what's planned or in progress. If you want to work on something not listed, open an issue first to discuss it.
-
-## Guidelines
-
-- Keep it simple. open-wispr is intentionally minimal.
-- No cloud dependencies. Everything must run on-device.
-- Test on Apple Silicon. Intel Macs are not supported.
-- Match the existing code style.
-- Include tests for any new or changed logic.
-
-## License
-
-By contributing, you agree that your contributions will be licensed under the MIT License.
+Вклад в проект распространяется на условиях MIT. См. [исходный текст лицензии](LICENSE) и [русский перевод для ознакомления](LICENSE.ru.md).

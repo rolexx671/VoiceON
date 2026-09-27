@@ -21,8 +21,8 @@ class AudioRecorder {
     func prepare() {
         queue.async {
             guard self.currentOutputURL == nil else { return }
-            // An initialized input unit can keep Bluetooth headphones in headset mode.
-            // Pick up the current route only when recording starts.
+            // Инициализированный блок ввода может удерживать Bluetooth-наушники в режиме гарнитуры.
+            // Определяем текущий маршрут звука только в начале записи.
             self.capture = nil
         }
     }
@@ -44,8 +44,8 @@ class AudioRecorder {
         if let capture, capture.cacheState.canReuse(for: route) { return capture }
         capture = nil
         let startedAt = DispatchTime.now().uptimeNanoseconds
-        // VoiceProcessingIO binds the output device and can be slow to initialize.
-        // The default HAL path captures input only, without holding playback open.
+        // VoiceProcessingIO привязывает устройство вывода и может медленно запускаться.
+        // Стандартный путь HAL захватывает только вход и не удерживает устройство воспроизведения.
         let useVoiceProcessing: Bool
         if #available(macOS 14.0, *) { useVoiceProcessing = selectedVoiceProcessing }
         else { useVoiceProcessing = false }
@@ -63,7 +63,7 @@ class AudioRecorder {
                 let capture = try configuredCapture()
                 try capture.start(to: outputURL, requestedAt: requestedAt)
                 currentOutputURL = outputURL
-                print("Микрофон готов через \((DispatchTime.now().uptimeNanoseconds - requestedAt) / 1_000_000) мс (обработка голоса: \(capture.voiceProcessing))")
+                print("Микрофон готов через \((DispatchTime.now().uptimeNanoseconds - requestedAt) / 1_000_000) мс (обработка голоса: \(capture.voiceProcessing ? "включена" : "выключена"))")
             } catch {
                 capture = nil
                 throw error

@@ -34,7 +34,7 @@ final class RecordingStoreTests: XCTestCase {
 
     func testTempRecordingURL() {
         let url = RecordingStore.tempRecordingURL()
-        XCTAssertTrue(url.lastPathComponent.hasPrefix("open-wispr-recording-"))
+        XCTAssertTrue(url.lastPathComponent.hasPrefix("voiceon-recording-"))
         XCTAssertEqual(url.pathExtension, "wav")
     }
 

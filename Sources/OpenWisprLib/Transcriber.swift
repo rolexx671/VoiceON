@@ -75,11 +75,11 @@ public class Transcriber {
             "-f", audioURL.path,
             "-l", language,
             "-nt",
-            // Disable cross-window context carry-over. whisper.cpp feeds each
-            // 30s window's decoded text as the prompt for the next window; on
-            // long dictation this compounds into repetition/hallucination
-            // loops (sentences repeating verbatim, then trailing off).
-            // max-context 0 decodes each window independently and stops it.
+            // Отключаем перенос контекста между фрагментами. whisper.cpp передаёт
+            // распознанный текст каждого 30-секундного фрагмента в следующий;
+            // при длинной диктовке это может вызывать повторы и выдуманный текст
+            // (предложения повторяются, затем обрываются).
+            // max-context 0 распознаёт каждый фрагмент независимо и предотвращает повторы.
             "-mc", "0",
         ]
         let dictionaryPrompt = DictionaryPostProcessor.buildPrompt(from: customDictionary)
@@ -130,7 +130,7 @@ public class Transcriber {
         for match in matches.reversed() {
             let innerRange = match.range(at: 1)
             let inner = nsText.substring(with: innerRange)
-            if knownMarkers.contains(inner) {
+            if knownMarkers.contains(inner) || knownMarkers.contains(inner.lowercased()) {
                 let fullRange = Range(match.range, in: result)!
                 result.replaceSubrange(fullRange, with: "")
             }

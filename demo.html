@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>open-wispr demo</title>
-  <link rel="canonical" href="https://open-wispr.com/demo.html">
+  <title>VoiceON — пример голосового ввода</title>
   <meta name="robots" content="noindex">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -104,14 +103,14 @@
       <div class="demo-keyboard">
         <div class="demo-key" id="demoKey">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          Globe
+          🌐 / fn
         </div>
-        <div class="demo-key-hint" id="demoHint">holding</div>
+        <div class="demo-key-hint" id="demoHint">удерживается</div>
       </div>
       <div class="demo-waveform" id="demoWave">
         <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
       </div>
-      <div class="demo-label" id="demoLabel">Idle</div>
+      <div class="demo-label" id="demoLabel">Ожидание</div>
     </div>
     <div class="demo-editor">
       <span class="demo-text" id="demoText"></span><span class="demo-cursor" id="demoCursor"></span>
@@ -127,7 +126,7 @@
   var label=document.getElementById('demoLabel');
   var text=document.getElementById('demoText');
   var cursor=document.getElementById('demoCursor');
-  var phrase="Can you refactor the auth module? It should use JWT tokens instead of session cookies.";
+  var phrase="Привет! Давай встретимся завтра после обеда и обсудим планы на неделю.";
   var words=phrase.split(' ');
   var timer;
 
@@ -136,7 +135,7 @@
     hint.classList.remove('active');
     wave.classList.remove('active');
     label.classList.remove('active');
-    label.textContent='Idle';
+    label.textContent='Ожидание';
     text.textContent='';
     cursor.classList.remove('typing');
   }
@@ -148,12 +147,12 @@
       hint.classList.add('active');
       wave.classList.add('active');
       label.classList.add('active');
-      label.textContent='Recording';
+      label.textContent='Запись';
       timer=setTimeout(function(){
         key.classList.remove('active');
         hint.classList.remove('active');
         wave.classList.remove('active');
-        label.textContent='Dictating...';
+        label.textContent='Распознавание…';
         cursor.classList.add('typing');
         timer=setTimeout(function(){
           text.textContent=phrase;

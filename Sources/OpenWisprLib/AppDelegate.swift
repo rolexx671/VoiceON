@@ -218,9 +218,9 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         applyConfigChange(newConfig)
     }
 
-    /// Configs written by older versions store only the numeric AudioDeviceID,
-    /// which is not stable across reboots or device replugs. If that ID still
-    /// refers to a device, persist its UID so the selection survives.
+    /// Старые настройки хранят только числовой AudioDeviceID, который меняется
+    /// после перезагрузки или переподключения. Если устройство ещё доступно,
+    /// сохранить его постоянный UID, чтобы выбор микрофона не сбрасывался.
     private func migrateAudioDeviceUIDIfNeeded() {
         guard config.audioInputDeviceUID == nil,
               let legacyID = config.audioInputDeviceID,

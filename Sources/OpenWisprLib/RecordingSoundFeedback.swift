@@ -1,6 +1,6 @@
 import AppKit
 
-/// Keeps the system sounds alive while AppKit plays them asynchronously.
+/// Сохраняет системные звуки в памяти, пока AppKit воспроизводит их асинхронно.
 final class RecordingSoundFeedback {
     private let started = NSSound(named: NSSound.Name("Tink"))
     private let stopped = NSSound(named: NSSound.Name("Pop"))

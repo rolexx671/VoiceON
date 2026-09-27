@@ -1,41 +1,81 @@
-# Models
+# Модели распознавания VoiceON
 
-Complete reference for the Whisper models open-wispr supports. For a quick overview see the [README](README.md#models).
+VoiceON распознаёт речь локально с помощью Whisper. В установочный образ VoiceON.dmg включена многоязычная модель **`base`**, а язык распознавания по умолчанию — **русский (`ru`)**.
 
-## All supported models
+## Многоязычные модели для русской речи
 
-| Model | Size | Speed | Accuracy | Notes |
-|---|---|---|---|---|
-| `tiny.en` | 75 MB | Fastest | Lower | Quick notes, short phrases |
-| `tiny.en-q5_1` | 31 MB | Fastest | Lower | Quantized `tiny.en` (5-bit) — ~⅓ disk/RAM, slight quality loss |
-| **`base.en`** | 142 MB | **Fast** | **Good** | **Most users (default)** |
-| `base.en-q5_1` | 57 MB | Fast | Good | Quantized `base.en` (5-bit) — ~⅓ disk/RAM, slight quality loss |
-| `small.en` | 466 MB | Moderate | Better | Longer dictation, technical terms |
-| `small.en-q5_1` | 181 MB | Moderate | Better | Quantized `small.en` (5-bit) — ~⅓ disk/RAM, slight quality loss |
-| `medium.en` | 1.5 GB | Slower | Great | Maximum accuracy, complex speech |
-| `medium.en-q5_0` | 514 MB | Slower | Great | Quantized `medium.en` (5-bit) — ~⅓ disk/RAM, slight quality loss |
-| `large-v3-turbo` | 1.6 GB | Moderate | Great | Fast multilingual, near-large accuracy |
-| `large-v3-turbo-q8_0` | 834 MB | Moderate | Great | Quantized `large-v3-turbo` (8-bit) — ~½ disk/RAM, near-zero quality loss |
-| `large-v3-turbo-q5_0` | 547 MB | Moderate | Great-ish | Quantized `large-v3-turbo` (5-bit) — ~⅓ disk/RAM, slight quality loss |
-| `large-v3` | 3 GB | Slowest | Best | Multilingual, highest accuracy (M1 Pro+ recommended) |
+| Модель | Примерный размер | Особенности |
+|---|---|---|
+| `tiny` | 75 МБ | Самая компактная, подходит для коротких простых фраз |
+| **`base`** | **142 МБ** | **Включена в сборку; разумная отправная точка для диктовки** |
+| `small` | 466 МБ | Более крупная модель для сложных фраз и терминов |
+| `medium` | 1,5 ГБ | Требует больше оперативной памяти и времени |
+| `large-v3-turbo` | 1,6 ГБ | Крупная модель с ускоренным распознаванием |
+| `large-v3-turbo-q8_0` | 834 МБ | Сжатие до 8 бит, размер примерно вдвое меньше |
+| `large-v3-turbo-q5_0` | 547 МБ | Сжатие до 5 бит, меньший расход памяти |
+| `large-v3` | 3 ГБ | Крупная модель; рекомендуется Mac с достаточным объёмом памяти |
 
-## Quantized variants
+Размеры округлены. Качество и скорость зависят от модели, компьютера, микрофона, шума и особенностей речи. Более крупная модель обычно улучшает распознавание, но занимает больше места и работает медленнее.
 
-The `-q5_0`, `-q5_1`, and `-q8_0` rows are not separate models — they're the full model's weights compressed with integer quantization. The compute path is identical, so transcription speed is roughly the same as the corresponding full model, but disk and resident memory drop substantially.
+## Модели только для английского языка
 
-The number after `q` is the bit width per weight: lower = smaller file, more quality loss.
+Эти модели сохранены для совместимости с исходным проектом. **Для русского языка они не подходят.**
 
-- **`q8_0`** (8-bit) — most conservative. ~½ the size of the full model. Quality loss is barely measurable; safe default if you want a smaller download without thinking about it.
-- **`q5_1`** / **`q5_0`** (5-bit) — more aggressive. ~⅓ the size of the full model. Quality cost is small but real; you may notice it on edge cases (proper nouns, accents, ambient noise, long uninterrupted speech). `q5_1` is slightly higher quality than `q5_0`; whisper.cpp ships `q5_1` for the smaller English models and `q5_0` for `medium.en` and the large-tier models.
+| Модель | Примерный размер |
+|---|---|
+| `tiny.en` | 75 МБ |
+| `tiny.en-q5_1` | 31 МБ |
+| `base.en` | 142 МБ |
+| `base.en-q5_1` | 57 МБ |
+| `small.en` | 466 МБ |
+| `small.en-q5_1` | 181 МБ |
+| `medium.en` | 1,5 ГБ |
+| `medium.en-q5_0` | 514 МБ |
 
-For everyday dictation the difference between a quantized model and its full counterpart is usually imperceptible. If you start noticing misrecognitions on a quantized variant that don't happen on the full version, switch up — the trade-off isn't worth it for your workload.
+Суффикс `.en`, в том числе перед обозначением сжатия, означает модель только для английского. Модели `large-v3` и `large-v3-turbo` многоязычные.
 
-## English vs. multilingual
+## Что означает сжатие модели
 
-Models ending in `.en` (including the `.en-q…` quantized variants) are English-only. There is no English-only large model upstream — OpenAI never released one, so pick `large-v3-turbo` for the fastest large-tier multilingual option.
+Суффиксы `-q5_0`, `-q5_1` и `-q8_0` обозначают квантование: веса той же модели хранятся с меньшей точностью. Это уменьшает размер файла и потребление памяти. Скорость не обязательно возрастёт; качество может немного снизиться.
 
-To use another language, switch to the equivalent multilingual model (e.g. `base.en` → `base`, or `large-v3-turbo` for the fastest large-tier option) and set the `language` field in `~/.config/open-wispr/config.json` to your [ISO 639-1 code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). Multilingual models are slightly less accurate for English but support 99 languages.
+- **`q8_0`** — 8 бит на вес: примерно половина исходного размера и обычно небольшое влияние на качество.
+- **`q5_1` / `q5_0`** — 5 бит на вес: примерно треть исходного размера; ошибки могут стать заметнее в именах, специальной терминологии, при шуме и нестандартном произношении.
 
-## Where these come from
+Если сжатая модель заметно ошибается в вашей диктовке, попробуйте полный вариант или более крупную модель.
 
-Models are downloaded on demand from [`ggerganov/whisper.cpp`](https://huggingface.co/ggerganov/whisper.cpp/tree/main) on HuggingFace and cached in `~/.config/open-wispr/models/`.
+## Смена модели и языка
+
+Нажмите значок VoiceON в строке меню, откройте **«Модель»** и выберите вариант из раздела **«Многоязычные — подходят для русского»**. В пункте **«Язык речи»** выберите **«Русский»**. Для отсутствующей модели потребуется загрузка из интернета.
+
+В меню названия переведены: **«Минимальная»** — `tiny`, **«Базовая»** — `base`, **«Небольшая»** — `small`, **«Средняя»** — `medium`, **«Большая ускоренная, версия 3»** — `large-v3-turbo`, **«Большая, версия 3»** — `large-v3`.
+
+При необходимости те же параметры можно изменить в файле `~/.config/voiceon/config.json` через пункт **«Открыть файл настроек…»**. Для русской речи:
+
+```json
+{
+  "modelSize": "base",
+  "language": "ru"
+}
+```
+
+После ручного изменения файла выберите **«Применить настройки из файла»**. Значение `"auto"` включает автоматическое определение языка.
+
+| Язык | Код |
+|---|---|
+| Русский | `ru` |
+| Английский | `en` |
+| Украинский | `uk` |
+| Белорусский | `be` |
+| Казахский | `kk` |
+| Французский | `fr` |
+| Немецкий | `de` |
+| Испанский | `es` |
+| Итальянский | `it` |
+| Португальский | `pt` |
+| Японский | `ja` |
+| Китайский | `zh` |
+| Корейский | `ko` |
+
+## Откуда загружаются модели
+
+Дополнительные модели загружаются из [репозитория ggerganov/whisper.cpp на Hugging Face](https://huggingface.co/ggerganov/whisper.cpp/tree/main) и сохраняются в `~/.config/voiceon/models/`. Встроенная модель находится внутри приложения; её не нужно скачивать при первом запуске готовой сборки.

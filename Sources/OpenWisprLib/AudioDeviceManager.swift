@@ -95,11 +95,11 @@ class AudioDeviceManager {
         return deviceID
     }
 
-    /// Resolve the configured input device to a current AudioDeviceID.
-    /// A stored UID wins over the numeric ID, because AudioDeviceIDs are not
-    /// stable across reboots or device replugs while UIDs are. If a UID is
-    /// set but no longer present, returns nil (system default) rather than
-    /// trusting the possibly-reassigned numeric ID.
+    /// Найти текущий AudioDeviceID выбранного устройства ввода.
+    /// Сохранённый UID имеет приоритет: числовой AudioDeviceID может измениться
+    /// после перезагрузки или переподключения устройства. Если устройства с
+    /// сохранённым UID больше нет, вернуть nil для системного устройства
+    /// по умолчанию, поскольку числовой ID уже мог получить другой микрофон.
     static func resolveConfiguredDeviceID(uid: String?, legacyID: AudioDeviceID?) -> AudioDeviceID? {
         guard let uid = uid else { return legacyID }
         return listInputDevices().first(where: { $0.uid == uid })?.id

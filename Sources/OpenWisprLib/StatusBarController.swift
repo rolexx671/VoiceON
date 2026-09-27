@@ -31,7 +31,10 @@ class StatusBarController: NSObject {
     }
 
     var state: State = .idle {
-        didSet { updateIcon() }
+        didSet {
+            updateIcon()
+            buildMenu()
+        }
     }
 
     override init() {
@@ -276,6 +279,31 @@ class StatusBarController: NSObject {
 
         menu.addItem(NSMenuItem.separator())
 
+        let hotkeyItem = NSMenuItem(title: "Клавиша диктовки: \(hotkeyDesc)", action: nil, keyEquivalent: "")
+        let hotkeySubmenu = NSMenu()
+        let hotkeyOptions: [(String, HotkeyConfig)] = [
+            ("Fn (глобус)", HotkeyConfig(keyCode: 63, modifiers: [])),
+            ("Правая ⌥ (Option)", HotkeyConfig(keyCode: 61, modifiers: [])),
+            ("F5", HotkeyConfig(keyCode: 96, modifiers: [])),
+            ("⌃ (Control) + пробел", HotkeyConfig(keyCode: 49, modifiers: ["ctrl"])),
+        ]
+        for (label, hotkey) in hotkeyOptions {
+            let target = MenuItemTarget { [weak self] in
+                var cfg = Config.load()
+                cfg.hotkey = hotkey
+                try? cfg.save()
+                self?.onConfigChange?(cfg)
+            }
+            menuItemTargets.append(target)
+            let item = NSMenuItem(title: label, action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
+            item.target = target
+            item.state = config.hotkeys == [hotkey] ? .on : .off
+            item.toolTip = "Заменить текущие сочетания этой клавишей диктовки"
+            hotkeySubmenu.addItem(item)
+        }
+        hotkeyItem.submenu = hotkeySubmenu
+        menu.addItem(hotkeyItem)
+
         let toggleTarget = MenuItemTarget { [weak self] in
             var cfg = Config.load()
             let current = cfg.toggleMode?.value ?? false
@@ -319,6 +347,52 @@ class StatusBarController: NSObject {
             voiceItem.isEnabled = false
         }
         menu.addItem(voiceItem)
+
+        let punctuationTarget = MenuItemTarget { [weak self] in
+            var cfg = Config.load()
+            cfg.spokenPunctuation = FlexBool(!(cfg.spokenPunctuation?.value ?? false))
+            try? cfg.save()
+            self?.onConfigChange?(cfg)
+        }
+        menuItemTargets.append(punctuationTarget)
+        let punctuationItem = NSMenuItem(title: "Пунктуация голосом", action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
+        punctuationItem.target = punctuationTarget
+        punctuationItem.state = (config.spokenPunctuation?.value ?? false) ? .on : .off
+        punctuationItem.toolTip = "Произносите «точка», «запятая», «вопросительный знак», «новая строка» — VoiceON вставит нужные знаки."
+        menu.addItem(punctuationItem)
+
+        let vadTarget = MenuItemTarget { [weak self] in
+            var cfg = Config.load()
+            cfg.voiceActivityDetection = !cfg.isVADEnabled
+            try? cfg.save()
+            self?.onConfigChange?(cfg)
+        }
+        menuItemTargets.append(vadTarget)
+        let vadItem = NSMenuItem(title: "Определение речи (VAD)", action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
+        vadItem.target = vadTarget
+        vadItem.state = config.isVADEnabled ? .on : .off
+        vadItem.toolTip = "Исключает участки тишины перед распознаванием. Модель определения речи уже встроена в VoiceON."
+        menu.addItem(vadItem)
+
+        let retentionItem = NSMenuItem(title: "Хранить последние записи", action: nil, keyEquivalent: "")
+        let retentionSubmenu = NSMenu()
+        for count in [0, 5, 10, 25, 50, 100] {
+            let target = MenuItemTarget { [weak self] in
+                var cfg = Config.load()
+                cfg.maxRecordings = count
+                try? cfg.save()
+                self?.onConfigChange?(cfg)
+            }
+            menuItemTargets.append(target)
+            let label = count == 0 ? "Не сохранять" : "Последних записей: \(count)"
+            let item = NSMenuItem(title: label, action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
+            item.target = target
+            item.state = Config.effectiveMaxRecordings(config.maxRecordings) == count ? .on : .off
+            retentionSubmenu.addItem(item)
+        }
+        retentionItem.submenu = retentionSubmenu
+        retentionItem.toolTip = "Сохранённые записи можно повторно распознать через меню «Последние записи»."
+        menu.addItem(retentionItem)
 
         let dictTarget = MenuItemTarget {
             DictionaryWindowController.shared.showWindow(nil)
@@ -422,7 +496,7 @@ class StatusBarController: NSObject {
 
         3. Если вставка не сработала, выберите «Скопировать последний текст» в меню VoiceON и вставьте его клавишами ⌘+V.
 
-        Язык речи и микрофон можно выбрать в меню. При первом выборе модели дождитесь её загрузки. После загрузки распознавание работает на вашем Mac без интернета.
+        Язык речи, микрофон и клавишу диктовки можно выбрать в меню. Базовая модель распознавания и модель определения речи уже встроены: VoiceON работает без интернета. Для загрузки дополнительных моделей понадобится интернет.
         """
         alert.addButton(withTitle: "Понятно")
         alert.addButton(withTitle: "Руководство на русском")
@@ -469,7 +543,7 @@ class StatusBarController: NSObject {
         }
     }
 
-    // MARK: - Recording animation: wave
+    // MARK: - Анимация записи: звуковая волна
 
     private static let waveFrameCount = 30
 
@@ -523,7 +597,7 @@ class StatusBarController: NSObject {
         }
     }
 
-    // MARK: - Transcribing animation: smooth wave dots
+    // MARK: - Анимация распознавания: плавно движущиеся точки
 
     private static let transcribeFrameCount = 30
 
@@ -570,7 +644,7 @@ class StatusBarController: NSObject {
         }
     }
 
-    // MARK: - Downloading: progress ring
+    // MARK: - Загрузка: круговой индикатор
 
     private static let downloadPulseFrameCount = 30
 
@@ -614,7 +688,7 @@ class StatusBarController: NSObject {
         }
     }
 
-    // MARK: - Custom drawn icons
+    // MARK: - Отрисовка значков
 
     static func drawLogo(active: Bool) -> NSImage {
         let size = NSSize(width: 18, height: 18)
@@ -748,7 +822,7 @@ class StatusBarController: NSObject {
 
             let centerX = rect.midX
 
-            // Triangle outline
+            // Контур треугольника
             let triangle = NSBezierPath()
             triangle.move(to: NSPoint(x: centerX, y: 16))
             triangle.line(to: NSPoint(x: centerX - 7, y: 3))
@@ -758,7 +832,7 @@ class StatusBarController: NSObject {
             triangle.lineJoinStyle = .round
             triangle.stroke()
 
-            // Exclamation mark
+            // Восклицательный знак
             let stemRect = NSRect(x: centerX - 0.75, y: 7, width: 1.5, height: 5)
             NSBezierPath(roundedRect: stemRect, xRadius: 0.75, yRadius: 0.75).fill()
             let dotRect = NSRect(x: centerX - 1, y: 4.5, width: 2, height: 2)

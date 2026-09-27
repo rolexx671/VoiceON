@@ -394,7 +394,7 @@ public struct HotkeyConfig: Codable, Equatable {
     public var modifierFlags: UInt64 {
         var flags: UInt64 = 0
         for mod in modifiers {
-            // An invalid value in a hand-edited config must never broaden a hotkey.
+            // Ошибка в настройках не должна расширять сочетание клавиш.
             guard let flag = Self.flag(for: mod) else { return UInt64.max }
             flags |= flag
         }

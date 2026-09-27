@@ -3,6 +3,19 @@ import XCTest
 
 final class DictionaryPostProcessorTests: XCTestCase {
 
+    func testRussianDictionaryMatchesCaseAndKeepsPunctuation() {
+        let entries = [DictionaryEntry(from: "войс он", to: "VoiceON")]
+        XCTAssertEqual(DictionaryPostProcessor.process("Открой ВОЙС ОН, пожалуйста.", dictionary: entries), "Открой VoiceON, пожалуйста.")
+    }
+
+    func testRussianDictionaryPrefersLongerPhraseAndPreservesWhitespace() {
+        let entries = [
+            DictionaryEntry(from: "голос", to: "ГОЛОС"),
+            DictionaryEntry(from: "голос онлайн", to: "VoiceON"),
+        ]
+        XCTAssertEqual(DictionaryPostProcessor.process("Запусти\tголос онлайн\nсейчас!", dictionary: entries), "Запусти\tVoiceON\nсейчас!")
+    }
+
     func testBuildPromptEmpty() {
         let result = DictionaryPostProcessor.buildPrompt(from: [])
         XCTAssertEqual(result, "")

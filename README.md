@@ -1,54 +1,82 @@
 <p align="center">
-  <img src="logo.svg" width="80" alt="open-wispr logo">
+  <img src="logo.svg" width="80" alt="Логотип VoiceON">
 </p>
 
-<h1 align="center">open-wispr</h1>
+<h1 align="center">VoiceON</h1>
 
 <p align="center">
-  <strong><a href="https://open-wispr.com">open-wispr.com</a></strong><br>
-  Local, private voice dictation for macOS. Hold a key, speak, release — your words appear at the cursor.<br>
-  Everything runs on-device. No audio or text ever leaves your machine.
+  <strong>Голосовой ввод на русском языке для macOS.</strong><br>
+  Удерживайте клавишу, говорите и отпустите — текст появится рядом с курсором.<br>
+  Распознавание работает на вашем Mac. Звук и текст не отправляются на сервер.
 </p>
 
-<p align="center">Powered by <a href="https://github.com/ggml-org/whisper.cpp">whisper.cpp</a> with Metal acceleration on Apple Silicon.</p>
+[Репозиторий VoiceON](https://github.com/rolexx671/VoiceON).
 
-## Install
+VoiceON — русская версия проекта [human37/open-wispr](https://github.com/human37/open-wispr), распространяемая по лицензии MIT. Распознавание выполняет [whisper.cpp](https://github.com/ggml-org/whisper.cpp) с ускорением Metal на компьютерах Apple Silicon. Интерфейс, сообщения и документация переведены на русский язык; русский язык распознавания выбран по умолчанию.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/human37/open-wispr/main/scripts/install.sh | bash
-```
+## Установка
 
-The script handles everything: installs via Homebrew, walks you through granting permissions, downloads the Whisper model, and starts the service. You'll see live feedback as each step completes.
+Готовая сборка предназначена для **Mac с процессором Apple Silicon (M1 или новее) и macOS 13 Ventura или новее**.
 
-> **Note:** Recent versions of Homebrew (6.0+) have tightened security around third-party taps, so you may be asked to trust this package before it installs. If that happens, the installer prints the exact `brew trust` command to run.
+1. Откройте **VoiceON.dmg**.
+2. Перетащите **VoiceON.app** в папку **«Программы»**.
+3. Запустите **VoiceON** из папки «Программы».
+4. Разрешите доступ к микрофону. В **«Системные настройки» → «Конфиденциальность и безопасность» → «Универсальный доступ»** включите VoiceON.
+5. Нажмите значок звуковой волны в строке меню, чтобы проверить состояние приложения.
+6. Поставьте курсор в текстовое поле. Удерживайте клавишу **🌐 / fn**, произнесите фразу и отпустите клавишу.
 
-A waveform icon appears in your menu bar when it's running.
+**Homebrew, Терминал и отдельная установка модели для готовой сборки не нужны.** В приложение включены движок распознавания, необходимые библиотеки и многоязычная модель `base`. После установки можно диктовать без интернета. Интернет понадобится, только если вы решите загрузить дополнительную модель распознавания. Модель определения речи Silero также включена в сборку.
 
-The default hotkey is the **Globe key** (🌐, bottom-left). Hold it, speak, release.
+Если клавиша 🌐 открывает окно эмодзи, откройте **«Системные настройки» → «Клавиатура»** и для действия при нажатии клавиши 🌐 выберите **«Ничего не делать»**.
 
-OpenWispr uses fast input-only audio capture by default. On macOS 14 and later, optional Voice Processing adds system echo/noise processing but can slow recording startup and reduce playback volume while recording. Enable it from the menu bar if needed.
+Подробные инструкции и решение проблем: **[руководство по установке](docs/install-guide.md)**.
 
-> **[Full installation guide](docs/install-guide.md)** — permissions walkthrough with screenshots, non-English macOS instructions, and troubleshooting.
+## Повседневное использование
 
-## Uninstall
+VoiceON работает в строке меню. Чтобы начать диктовку, удерживайте 🌐 / fn; чтобы распознать и вставить текст, отпустите клавишу. В режиме переключения запись начинается одним нажатием и завершается следующим.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/human37/open-wispr/main/scripts/uninstall.sh | bash
-```
+Если подходящее текстовое поле не выбрано, результат копируется в буфер обмена. Последнюю диктовку можно скопировать повторно через меню приложения. При включённой истории меню также позволяет повторно распознать сохранённые записи и скопировать результат.
 
-This stops the service, removes the formula, tap, config, models, app bundle, logs, and permissions.
+| Состояние | Значок |
+|---|---|
+| Ожидание | Звуковая волна |
+| Запись | Движущаяся звуковая волна |
+| Распознавание | Волна из точек |
+| Загрузка модели | Кольцо прогресса |
+| Ожидание разрешения | Замок |
 
-## Configuration
+По умолчанию используется быстрый захват звука с микрофона. На macOS 14 и новее можно включить обработку голоса средствами системы: она добавляет подавление шума и эха, но может замедлять начало записи и снижать громкость воспроизведения во время диктовки.
 
-Edit `~/.config/open-wispr/config.json`:
+## Настройки
+
+Нажмите значок звуковой волны в строке меню. Основные настройки меняются прямо в русском меню — редактировать файлы не требуется.
+
+| Пункт меню | Что можно выбрать |
+|---|---|
+| **Клавиша диктовки** | 🌐 / fn, правая Option, F5 или Ctrl + пробел |
+| **Язык речи** | Русский или другой язык |
+| **Модель** | Многоязычная модель; базовая уже включена в сборку |
+| **Микрофон** | Системный по умолчанию или конкретное устройство |
+| **Запись по нажатию вместо удержания** | Одно нажатие начинает запись, второе завершает |
+| **Пунктуация голосом** | Заменять произнесённые названия знаков, например «запятая» и «точка», соответствующими знаками |
+| **Определение речи (VAD)** | Отфильтровывать участки без речи; модель уже включена в приложение |
+| **Хранить последние записи** | Не хранить либо сохранять 5, 10, 25, 50 или 100 последних записей |
+| **Звуки начала и окончания записи** | Включить короткие звуковые сигналы |
+| **Подавление шума и эха (медленнее)** | Системная обработка голоса на macOS 14 и новее |
+| **Пользовательский словарь…** | Слова и имена, которые помогут распознаванию |
+
+### Расширенные настройки в файле
+
+Этот способ нужен для дополнительных параметров, например нескольких сочетаний клавиш или точного порога определения речи.
+
+Откройте настройки через пункт меню **«Открыть файл настроек…»**. Они хранятся в `~/.config/voiceon/config.json`. Технические имена параметров JSON остаются неизменными, чтобы приложение могло прочитать файл. Их смысл объяснён ниже. После изменения файла выберите в меню **«Применить настройки из файла»** или перезапустите приложение.
 
 ```json
 {
   "hotkey": { "keyCode": 63, "modifiers": [] },
-  "modelSize": "base.en",
-  "language": "en",
+  "modelSize": "base",
+  "language": "ru",
   "spokenPunctuation": false,
-  "whisperPrompt": "Use punctuation and capitalization.",
   "voiceActivityDetection": false,
   "voiceProcessing": false,
   "vadThreshold": 0.5,
@@ -58,9 +86,23 @@ Edit `~/.config/open-wispr/config.json`:
 }
 ```
 
-Then restart: `brew services restart open-wispr`
+| Параметр | По умолчанию | Назначение |
+|---|---|---|
+| `hotkey` | Код `63` | Клавиша диктовки: 🌐 / fn — `63`, правая Option — `61`, F5 — `96` |
+| `hotkeys` | Не задан | Массив сочетаний, каждое из которых запускает диктовку; имеет приоритет перед `hotkey` |
+| `modifiers` | `[]` | Дополнительные клавиши: `"cmd"`, `"ctrl"`, `"shift"`, `"opt"` |
+| `modelSize` | `"base"` | Модель распознавания; для русского языка выбирайте модель без `.en` |
+| `language` | `"ru"` | Язык распознавания: `"ru"` — русский, `"auto"` — автоматическое определение |
+| `spokenPunctuation` | `false` | Заменять произнесённые названия знаков препинания, например «запятая» и «точка», соответствующими знаками |
+| `whisperPrompt` | Не задан | Необязательная подсказка для Whisper о словаре, стиле или пунктуации; пустое значение оставляет стандартное поведение |
+| `voiceActivityDetection` | `false` | Отфильтровывать участки без речи с помощью локальной модели Silero, включённой в готовую сборку |
+| `voiceProcessing` | `false` | Системная обработка голоса на поддерживаемых версиях macOS; доступна также в меню приложения |
+| `vadThreshold` | `0.5` | Порог определения речи от `0` до `1`; уменьшение помогает обнаруживать тихую речь, но может пропускать больше фонового звука |
+| `maxRecordings` | `0` | Сколько последних записей хранить локально: `0` — не хранить, от `1` до `100` — хранить указанное число записей |
+| `toggleMode` | `false` | `true` — одно нажатие начинает запись, второе завершает; `false` — запись во время удержания |
+| `soundFeedback` | `false` | Воспроизводить короткий звук при начале и завершении записи |
 
-To bind multiple hotkeys, use the `hotkeys` array instead:
+Пример с двумя клавишами диктовки:
 
 ```json
 {
@@ -71,92 +113,47 @@ To bind multiple hotkeys, use the `hotkeys` array instead:
 }
 ```
 
-Both `hotkey` (single) and `hotkeys` (array) are supported. If both are present, `hotkeys` takes precedence.
+Caps Lock не подходит для удержания: macOS переключает её состояние вместо обычного события отпускания клавиши.
 
-| Option | Default | Values |
+## Модели распознавания
+
+В готовую сборку включена **многоязычная модель `base`**, подходящая для русской речи. Более крупные модели обычно лучше распознают сложные фразы, но требуют больше памяти и времени. Скорость и качество зависят от компьютера, микрофона, фонового шума и речи.
+
+| Модель | Примерный размер | Назначение |
 |---|---|---|
-| **hotkey** | `63` | Globe (`63`), Right Option (`61`), F5 (`96`), or any key code |
-| **hotkeys** | — | Array of hotkey objects — bind multiple keys to trigger dictation |
-| **modifiers** | `[]` | `"cmd"`, `"ctrl"`, `"shift"`, `"opt"` — combine for chords |
-| **modelSize** | `"base.en"` | See model table below |
-| **language** | `"en"` | `"auto"` for auto-detect, or any [ISO 639-1 code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) — e.g. `it`, `fr`, `de`, `es` |
-| **spokenPunctuation** | `false` | Say "comma", "period", etc. to insert punctuation instead of auto-punctuation |
-| **whisperPrompt** | — | Optional prompt text passed to Whisper to guide style, vocabulary, or punctuation. Omit it or leave it blank to use Whisper's default behavior. |
-| **voiceActivityDetection** | `false` | Enable local Silero voice activity detection to filter non-speech audio before transcription. The VAD model downloads when first enabled; quiet or very short speech may be skipped. |
-| **voiceProcessing** | `false` | Use macOS voice processing on supported systems. Adds echo/noise processing but can slow recording startup and reduce playback volume while recording. Also available in the menu bar. |
-| **vadThreshold** | `0.5` | Speech detection sensitivity from `0` to `1`; lower values detect quieter speech but may admit more background audio. |
-| **maxRecordings** | `0` | Optionally store past recordings locally as `.wav` files for re-transcribing from the tray menu. `0` = nothing stored (default). Set 1-100 to keep that many recent recordings. |
-| **toggleMode** | `false` | Press hotkey once to start recording, press again to stop. Default is hold-to-talk. |
-| **soundFeedback** | `false` | Play short system sounds when recording starts and stops. Turn on in the menu bar or set to `true`. |
+| `tiny` | 75 МБ | Короткие фразы с минимальной нагрузкой |
+| **`base`** | **142 МБ** | **Повседневная диктовка; включена в сборку** |
+| `small` | 466 МБ | Более сложные фразы и терминология |
+| `medium` | 1,5 ГБ | Распознавание с большим расходом памяти |
+| `large-v3-turbo` | 1,6 ГБ | Крупная многоязычная модель с ускоренным распознаванием |
+| `large-v3` | 3 ГБ | Крупная многоязычная модель с высокими требованиями к ресурсам |
 
-Caps Lock cannot be used as a hotkey: macOS toggles its state rather than sending a release event, so it cannot provide reliable hold-to-talk behavior.
+Модели с суффиксом `.en` распознают только английский и **не подходят для русской диктовки**. Подробности и сжатые варианты перечислены в **[справочнике моделей](MODELS.md)**.
 
-### Models
+## Конфиденциальность
 
-Larger models are more accurate but slower and use more memory. The default `base.en` is a good balance for most users.
+Запись и распознавание выполняются локально. При выключенной истории аудиофайл используется временно, а затем удаляется. VoiceON не отправляет записи и распознанный текст в облако. Пункт меню **«Хранить последние записи»** позволяет по желанию сохранять ограниченное число записей на вашем Mac.
 
-| Model | Size | Speed | Accuracy | Best for |
-|---|---|---|---|---|
-| `tiny.en` | 75 MB | Fastest | Lower | Quick notes, short phrases |
-| **`base.en`** | 142 MB | **Fast** | **Good** | **Most users (default)** |
-| `small.en` | 466 MB | Moderate | Better | Longer dictation, technical terms |
-| `medium.en` | 1.5 GB | Slower | Great | Maximum accuracy, complex speech |
-| `large-v3-turbo` | 1.6 GB | Moderate | Great | Fast multilingual, near-large accuracy |
-| `large-v3` | 3 GB | Slowest | Best | Multilingual, highest accuracy (M1 Pro+ recommended) |
+Готовая сборка содержит модель `base`. Сетевое подключение нужно для загрузки дополнительных моделей распознавания. Модель определения речи уже включена в готовую сборку.
 
-Each model also has quantized `-q5_0` / `-q5_1` / `-q8_0` variants at ~⅓–½ the disk and RAM with minimal quality loss. See **[MODELS.md](MODELS.md)** for the complete list and tradeoffs.
+## Удаление
 
-> **Non-English languages:** Models ending in `.en` are English-only. To use another language, switch to the equivalent multilingual model (e.g. `base.en` → `base`, or `large-v3-turbo` for the fastest large-tier option) and set the `language` field to your language code. Multilingual models are slightly less accurate for English but support 99 languages.
+Завершите VoiceON через значок в строке меню и переместите **VoiceON.app** из «Программ» в Корзину. Если настройки, дополнительные модели и история больше не нужны, удалите папку `~/.config/voiceon`: в Finder выберите **«Переход» → «Переход к папке…»** и вставьте этот путь. Это удалит и сохранённые в ней записи.
 
-If the Globe key opens the emoji picker: **System Settings → Keyboard → "Press 🌐 key to" → "Do Nothing"**
+## Сборка из исходного кода
 
-## Menu bar
+Этот раздел нужен разработчикам. Для использования готового VoiceON.dmg он не требуется.
 
-Click the waveform icon for status and options. **Recent Recordings** lists your last recordings; click one to re-transcribe and copy the result to the clipboard.
-
-| State | Icon |
-|---|---|
-| Idle | Waveform outline |
-| Recording | Bouncing waveform |
-| Transcribing | Wave dots |
-| Downloading model | Progress ring |
-| Waiting for permission | Lock |
-
-If no text field is focused, the transcription is copied to the clipboard automatically. **Copy Last Dictation** in the menu bar also lets you copy the most recent transcription again.
-
-## Compare
-
-| | open-wispr | VoiceInk | Wispr Flow | Superwhisper | Apple Dictation |
-|---|---|---|---|---|---|
-| **Price** | **Free** | $39.99 | $15/mo | $8.49/mo | Free |
-| **Open source** | MIT | GPLv3 | No | No | No |
-| **100% on-device** | Yes | Yes | No | Yes | Partial |
-| **Push-to-talk** | Yes | Yes | Yes | Yes | No |
-| **AI features** | No | AI assistant | AI rewriting | AI formatting | No |
-| **Account required** | No | No | Yes | Yes | Apple ID |
-
-## Privacy
-
-open-wispr is completely local. Audio is recorded to a temp file, transcribed by whisper.cpp on your CPU/GPU, and the temp file is deleted. No network requests are made except to download the Whisper model on first run and the VAD model if enabled. Optionally, you can configure open-wispr to store a number of past recordings locally via the `maxRecordings` setting. Those recordings stay private and on your machine, and we default to not storing anything.
-
-## Roadmap
-
-See what's planned and in progress on the [public roadmap](https://github.com/users/human37/projects/2). Feature requests and ideas are welcome as [issues](https://github.com/human37/open-wispr/issues).
-
-## Build from source
+В каталоге исходного кода на Mac с инструментами разработчика Apple:
 
 ```bash
-git clone https://github.com/human37/open-wispr.git
-cd open-wispr
-brew install whisper-cpp
 swift build -c release
-.build/release/open-wispr start
+swift test
+bash scripts/build-dmg.sh
 ```
 
-## Support
+Сценарий `scripts/build-dmg.sh` создаёт файл `dist/VoiceON.dmg` — готовый установочный образ со встроенным распознаванием. Подробности работы с исходным кодом: **[руководство для участников](CONTRIBUTING.md)**.
 
-open-wispr is free and always will be. If you find it useful, you can [leave a tip](https://buy.stripe.com/4gM5kC2AU0Ssd4l6Hqd7q00).
+## Авторство и лицензия
 
-## License
-
-MIT
+Основано на [open-wispr](https://github.com/human37/open-wispr), автор исходного проекта — human37. Лицензия MIT сохранена в [LICENSE](LICENSE); [русский перевод для ознакомления](LICENSE.ru.md) помогает прочитать её условия. Юридически значимым остаётся исходный текст лицензии.

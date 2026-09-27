@@ -3,6 +3,29 @@ import XCTest
 
 final class TranscriberTests: XCTestCase {
 
+    func testDefaultArgumentsRecognizeRussianWithoutTranslation() throws {
+        let args = Transcriber().arguments(
+            modelPath: "/models/ggml-base.bin",
+            audioURL: URL(fileURLWithPath: "/tmp/запись встречи.wav")
+        )
+        let languageIndex = try XCTUnwrap(args.firstIndex(of: "-l"))
+        XCTAssertEqual(args[languageIndex + 1], "ru")
+        let inputIndex = try XCTUnwrap(args.firstIndex(of: "-f"))
+        XCTAssertEqual(args[inputIndex + 1], "/tmp/запись встречи.wav")
+        XCTAssertFalse(args.contains("-tr"))
+        XCTAssertFalse(args.contains("--translate"))
+        XCTAssertFalse(args.contains("--prompt"))
+    }
+
+    func testRussianNoiseMarkersAreRemovedAndRealTextIsPreserved() {
+        XCTAssertEqual(Transcriber.stripWhisperMarkers("[Музыка] [Аплодисменты]"), "")
+        XCTAssertEqual(Transcriber.stripWhisperMarkers("[МУЗЫКА] [АПЛОДИСМЕНТЫ] (СМЕХ) [ШУМ]"), "")
+        XCTAssertEqual(Transcriber.stripWhisperMarkers("(музыка) [аплодисменты]"), "")
+        XCTAssertEqual(Transcriber.stripWhisperMarkers("Привет [Музыка] мир [Аплодисменты]"), "Привет мир")
+        XCTAssertEqual(Transcriber.stripWhisperMarkers("[Шум] (Смех) [Тишина] (Неразборчиво)"), "")
+        XCTAssertEqual(Transcriber.stripWhisperMarkers("Музыка и аплодисменты [1] (примечание)"), "Музыка и аплодисменты [1] (примечание)")
+    }
+
     func testArgumentsIncludeWhisperPromptAsSingleFollowingArgument() throws {
         let prompt = "  Use punctuation, keep product names like OpenWispr.  "
         let transcriber = Transcriber(

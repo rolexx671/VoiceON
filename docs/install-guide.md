@@ -1,176 +1,126 @@
-# Installation Guide
+# Установка и использование VoiceON
 
-## Quick Install
+VoiceON — голосовой ввод на русском языке с локальным распознаванием. Готовая сборка работает на **Mac с Apple Silicon (M1 или новее), macOS 13 Ventura или новее**. Вариант для Intel в этот установочный образ не входит.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/human37/open-wispr/main/scripts/install.sh | bash
-```
+## Установка из VoiceON.dmg
 
-The installer handles everything automatically — Homebrew tap, formula install, permissions, model download, and service startup.
+1. Дважды нажмите на файл **VoiceON.dmg**.
+2. В открывшемся окне перетащите **VoiceON.app** на значок папки **«Программы»**. На некоторых экранах эта папка может называться **Applications**.
+3. Откройте Finder, перейдите в **«Программы»** и запустите **VoiceON**.
+4. После копирования образ можно извлечь через Finder.
 
-## What the installer does
+В сборку включены движок распознавания, многоязычная модель `base` и модель определения речи Silero. Для обычной русской диктовки не нужны Homebrew, Терминал, регистрация или подключение к интернету.
 
-1. **Installs via Homebrew** — taps `human37/open-wispr` and installs the formula. Recent versions of Homebrew (6.0+) have tightened security around third-party taps, so you may be asked to trust the package first — the installer prints the exact `brew trust` and retry commands if so.
-2. **Copies the app bundle** to `~/Applications/OpenWispr.app`
-3. **Requests permissions** — Microphone and Accessibility
-4. **Downloads the Whisper model** (~142 MB, one-time)
-5. **Starts the background service** via `brew services`
+Сборка подписана локальной подписью и не проходила нотарификацию Apple. Если macOS сообщает, что разработчик не проверен, и вы доверяете полученному файлу, откройте **«Системные настройки» → «Конфиденциальность и безопасность»**. После попытки запуска в разделе безопасности может появиться кнопка **«Всё равно открыть»**; подтвердите открытие приложения. Точная формулировка зависит от версии и языка macOS.
 
-## Audio capture
+## Разрешения
 
-OpenWispr defaults to fast, input-only microphone capture. It releases the audio device between recordings so it does not keep your headphones or speakers in a recording mode while idle.
+### Микрофон
 
-On macOS 14 or later, you can turn on **Voice Processing (slower)** in the menu bar, or set `"voiceProcessing": true` in `~/.config/open-wispr/config.json`. This enables Apple's echo/noise processing, but recording can take longer to start and other audio may get quieter while you dictate. The setting is off by default, including for existing config files without this key.
+При первом запросе выберите **«Разрешить»**. Если доступ был запрещён:
 
-If you use the AirPods microphone, [macOS may switch Bluetooth audio to its lower-quality headset mode](https://support.apple.com/en-us/102217) *during* a recording, regardless of this setting. Selecting another microphone can avoid that switch while you dictate.
+1. Откройте **«Системные настройки» → «Конфиденциальность и безопасность» → «Микрофон»**.
+2. Включите переключатель рядом с **VoiceON**.
+3. Завершите приложение через значок в строке меню и откройте снова.
 
-## Granting Permissions
+### Универсальный доступ
 
-open-wispr needs two macOS permissions to work:
+Это разрешение нужно для глобальной клавиши диктовки и вставки текста в другие приложения.
 
-### Microphone
+1. Откройте **«Системные настройки» → «Конфиденциальность и безопасность» → «Универсальный доступ»**.
+2. Найдите **VoiceON** и включите переключатель.
+3. Если приложения нет в списке, нажмите **«+»** и выберите **VoiceON.app** из папки **«Программы»**.
+4. При необходимости подтвердите изменение паролем пользователя или Touch ID.
 
-A system dialog will appear automatically during install. Click **Allow**.
+В системных окнах язык и названия разделов определяются настройками macOS. Само приложение VoiceON использует русский язык.
 
-### Accessibility
+## Первая диктовка
 
-Accessibility permission lets open-wispr detect your hotkey globally. During install, a pop-up like this will appear:
+1. Откройте «Заметки» или другое приложение с текстовым полем.
+2. Нажмите на место, куда нужно вставить текст.
+3. Удерживайте клавишу **🌐 / fn** в левом нижнем углу клавиатуры.
+4. Скажите, например: **«Привет! Это моя первая диктовка на русском языке»**.
+5. Отпустите клавишу и дождитесь распознавания.
 
-<p align="center">
-  <img width="465" alt="Accessibility permission prompt" src="https://github.com/user-attachments/assets/9a0533ae-c174-4395-9533-46b55c3cb592" />
-</p>
+Значок звуковой волны в строке меню показывает состояние. Если текстовое поле не выбрано, результат копируется в буфер обмена: его можно вставить сочетанием **⌘V**. Меню VoiceON также позволяет повторно скопировать последнюю диктовку.
 
-Click it to jump directly to the Accessibility settings. Find **OpenWispr** in the list and toggle it **ON**:
+Если 🌐 открывает эмодзи или переключает язык, откройте **«Системные настройки» → «Клавиатура»** и выберите **«Ничего не делать»** для действия при нажатии клавиши 🌐. Если macOS отдельно использует двойное нажатие fn для встроенной диктовки, измените это сочетание в настройках диктовки.
 
-<p align="center">
-  <img width="711" alt="Accessibility settings with OpenWispr toggled on" src="https://github.com/user-attachments/assets/f8243e28-4fae-4aba-a030-5c4c66c3cf07" />
-</p>
+## Звук и наушники
 
-If you missed the pop-up, navigate there manually:
+По умолчанию VoiceON использует быстрый захват звука только с микрофона. Между записями аудиоустройство освобождается.
 
-> **System Settings → Privacy & Security → Accessibility**
+На macOS 14 и новее в меню можно включить обработку голоса средствами системы. Она добавляет подавление эха и шума, но может замедлить начало записи и снизить громкость других звуков во время диктовки. По умолчанию эта возможность выключена.
 
-If `OpenWispr` doesn't appear in the list, click the **+** button and add it from `~/Applications/OpenWispr.app`.
+При использовании микрофона Bluetooth-наушников macOS может понижать качество воспроизведения на время записи. Если это мешает, выберите встроенный или отдельный микрофон в **«Системные настройки» → «Звук» → «Вход»**.
 
-### Non-English macOS
+## Настройки через меню
 
-The permission steps are the same regardless of your system language. macOS translates the Settings UI automatically — only the app name **OpenWispr** stays the same.
+Нажмите значок звуковой волны VoiceON в строке меню. Для обычной настройки не нужны Терминал и редактирование файлов.
 
-For reference, here's the path in a few languages:
+- **«Клавиша диктовки»** — выберите 🌐 / fn, правую Option, F5 или Ctrl + пробел.
+- **«Язык речи» → «Русский»** — язык распознавания; он уже выбран по умолчанию.
+- **«Модель»** — выберите модель из раздела **«Многоязычные — подходят для русского»**. Базовая модель уже включена в приложение. При выборе отсутствующей модели потребуется загрузка из интернета.
+- **«Микрофон»** — выберите системное устройство по умолчанию или конкретный микрофон.
+- **«Запись по нажатию вместо удержания»** — включите, если удобнее начинать запись одним нажатием и заканчивать следующим.
+- **«Пунктуация голосом»** — включите, чтобы говорить «запятая», «точка» и другие названия знаков препинания.
+- **«Определение речи (VAD)»** — включите фильтрацию участков без речи. Очень тихая или короткая фраза иногда может быть отфильтрована; если начало речи пропадает, попробуйте выключить эту настройку.
+- **«Хранить последние записи»** — выберите хранение 5, 10, 25, 50 или 100 последних записей либо отключите историю. Сохранённые записи доступны в пункте **«Последние записи»** для повторного распознавания.
+- **«Звуки начала и окончания записи»** — включите звуковые сигналы.
+- **«Пользовательский словарь…»** — добавьте нужные слова, имена или термины, чтобы помочь распознаванию.
 
-| Language | Path |
-|---|---|
-| English | System Settings → Privacy & Security → Accessibility |
-| Italian | Impostazioni di Sistema → Privacy e sicurezza → Accessibilità |
-| French | Réglages du système → Confidentialité et sécurité → Accessibilité |
-| German | Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen |
-| Spanish | Ajustes del Sistema → Privacidad y seguridad → Accesibilidad |
-| Portuguese | Ajustes do Sistema → Privacidade e Segurança → Acessibilidade |
+Для русского языка выбирайте модели **без `.en`**. Например, `base` поддерживает русскую речь, а `base.en` — только английскую. Подробности: [модели распознавания](../MODELS.md).
 
-## Troubleshooting
+### Дополнительные параметры
 
-### "Installed, but Accessibility permission was not confirmed"
+Если нужны параметры, отсутствующие в меню, выберите **«Открыть файл настроек…»**. Файл находится по пути `~/.config/voiceon/config.json`.
 
-The installer waits up to 5 minutes for Accessibility. The app remains open and will finish setup when macOS grants access. If OpenWispr already appears ON in **System Settings → Privacy & Security → Accessibility**, toggle it **OFF**, then **ON** again. The existing switch can refer to the previous app binary after a reinstall.
-
-If toggling does not help, remove the old OpenWispr entry and add the current app using the steps below. You do not need to reinstall after granting access.
-
-### App not appearing in Accessibility list
-
-1. Open **System Settings → Privacy & Security → Accessibility**
-2. Click the **+** button
-3. Navigate to `~/Applications/` and select `OpenWispr.app`
-4. Toggle it **ON**
-
-### Microphone denied
-
-If you accidentally denied microphone access:
-
-1. Go to **System Settings → Privacy & Security → Microphone**
-2. Find **OpenWispr** and toggle it **ON**
-3. Re-run the installer
-
-### Globe key opens emoji picker
-
-If the Globe key (🌐) triggers the emoji picker instead of open-wispr:
-
-> **System Settings → Keyboard → "Press 🌐 key to" → "Do Nothing"**
-
-### Right Option hotkey also triggers from left Option
-
-If you set right Option (`keyCode: 61`) as the hotkey, open-wispr should only trigger from the physical right Option key. If left Option also triggers, update to the latest build.
-
-### Config resets to default after editing `config.json`
-
-If `config.json` has invalid JSON or unsupported values, open-wispr now prints a warning and falls back to defaults for that run, without overwriting your file. Fix the JSON and restart the service:
-
-```bash
-brew services restart open-wispr
-```
-
-## Language Support
-
-open-wispr defaults to English, but Whisper supports many languages. To dictate in a different language, edit `~/.config/open-wispr/config.json`:
-
-1. Switch to a **multilingual model** (remove the `.en` suffix)
-2. Set the **language** to your [ISO 639-1 code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
-
-For example, to use Italian:
+Для русской речи в нём используются следующие значения:
 
 ```json
 {
-  "language": "it",
+  "language": "ru",
   "modelSize": "base"
 }
 ```
 
-Then restart: `brew services restart open-wispr`
+Имена параметров и моделей — технические обозначения; переводить их в самом файле нельзя. После ручного изменения выберите **«Применить настройки из файла»** в меню VoiceON или перезапустите приложение. См. [описание расширенных настроек](../README.md#расширенные-настройки-в-файле).
 
-The multilingual model will be downloaded automatically on next use.
+## Решение проблем
 
-### Available models
+### Приложение открыто, но ничего не происходит
 
-| Model | English-only | Multilingual | Size |
-|---|---|---|---|
-| tiny | `tiny.en` | `tiny` | ~75 MB |
-| base | `base.en` | `base` | ~142 MB |
-| small | `small.en` | `small` | ~466 MB |
-| medium | `medium.en` | `medium` | ~1.5 GB |
-| large (turbo) | — | `large-v3-turbo` | ~1.6 GB |
-| large (v3) | — | `large-v3` | ~3 GB |
+Проверьте значок VoiceON в правой части строки меню, разрешения на микрофон и универсальный доступ, выбранный микрофон и наличие активного текстового поля. Держите клавишу нажатой во время всей фразы и отпускайте после завершения речи.
 
-Larger models are more accurate but slower. `base` is a good starting point for most languages. There is no English-only large model upstream — pick `large-v3-turbo` for the fastest large-tier option (multilingual, near-large quality).
+### Разрешение включено, но приложение его не видит
 
-Each model also has quantized variants at ~⅓–½ the size with minimal quality loss. See [MODELS.md](https://github.com/human37/open-wispr/blob/main/MODELS.md) for the complete list and tradeoffs.
+После замены приложения запись в системных разрешениях иногда относится к предыдущей сборке. Выключите и снова включите переключатель VoiceON в разделе «Универсальный доступ». Если это не помогло, удалите VoiceON из списка кнопкой «−», добавьте установленное приложение из «Программ» заново и включите доступ. Затем перезапустите VoiceON.
 
-### Common language codes
+### Русская речь распознаётся плохо
 
-| Language | Code |
-|---|---|
-| English | `en` |
-| Italian | `it` |
-| French | `fr` |
-| German | `de` |
-| Spanish | `es` |
-| Portuguese | `pt` |
-| Japanese | `ja` |
-| Chinese | `zh` |
-| Korean | `ko` |
+В меню **«Язык речи»** выберите **«Русский»**, а в меню **«Модель»** — многоязычную модель. Попробуйте говорить ближе к микрофону, уменьшить фоновый шум или выбрать более крупную модель, например **«Небольшая» (`small`)**. Для её первой загрузки нужен интернет.
 
-## Uninstall
+### Начало фразы пропадает
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/human37/open-wispr/main/scripts/uninstall.sh | bash
-```
+Проверьте, не включена ли обработка голоса средствами системы: она может замедлить запуск записи. Если включено определение речи, временно отключите его — очень тихая или короткая фраза может быть отфильтрована.
 
-This removes the service, formula, tap, config, models, app bundle, logs, and resets Accessibility permissions.
+### Изменения настроек не применяются
 
-## Build from Source
+Проверьте синтаксис JSON: двойные кавычки, запятые между параметрами и отсутствие лишней запятой в конце. При ошибке приложение использует значения по умолчанию на текущий запуск, не исправляя ваш файл автоматически. После исправления перезапустите VoiceON.
 
-```bash
-git clone https://github.com/human37/open-wispr.git
-cd open-wispr
-brew install whisper-cpp
-swift build -c release
-.build/release/open-wispr start
-```
+### Нет текста после диктовки
+
+Дождитесь завершения распознавания, выберите пункт копирования последней диктовки в меню VoiceON и вставьте результат вручную сочетанием **⌘V**. Проверьте разрешение универсального доступа. Некоторые защищённые поля и приложения ограничивают автоматическую вставку.
+
+## История и конфиденциальность
+
+По умолчанию история выключена. Чтобы включить её, выберите нужное количество в меню **«Хранить последние записи»**. Аудиозапись обрабатывается локально и удаляется после использования. Если включить хранение записей, они останутся на вашем Mac и будут доступны для повторного распознавания через меню. Необходимые дополнительные модели загружаются из интернета; ваши записи и тексты для этого не отправляются.
+
+## Удаление
+
+1. Завершите VoiceON через значок в строке меню.
+2. Переместите **VoiceON.app** из «Программ» в Корзину.
+3. Чтобы удалить также настройки, дополнительные модели и историю, откройте через Finder папку `~/.config/voiceon` и переместите её в Корзину. Сохранённые в ней записи будут удалены вместе с папкой.
+4. При желании удалите VoiceON из списка разрешений универсального доступа.
+
+Сборка из исходного кода описана в [руководстве для участников](../CONTRIBUTING.md).

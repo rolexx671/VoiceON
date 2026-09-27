@@ -97,7 +97,7 @@ public class ModelDownloader: NSObject, URLSessionDownloadDelegate {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return false }
         defer { handle.closeFile() }
         guard let magic = try? handle.read(upToCount: 4), magic.count == 4 else { return false }
-        // GGML magic: 0x67676d6c ("ggml"), GGJT magic: 0x67676a74 ("ggjt"), GGUF magic: 0x46554747 ("GGUF")
+        // Сигнатура GGML: 0x67676d6c ("ggml"), сигнатура GGJT: 0x67676a74 ("ggjt"), сигнатура GGUF: 0x46554747 ("GGUF")
         let magicU32 = magic.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self) }
         let knownMagics: Set<UInt32> = [0x67676d6c, 0x67676a74, 0x46554747]
         return knownMagics.contains(magicU32)

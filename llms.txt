@@ -1,58 +1,68 @@
-# open-wispr
+# VoiceON
 
-> Free, open-source voice dictation for macOS. Powered by Whisper AI, runs 100% on-device.
+> Бесплатный голосовой ввод на русском языке для macOS с локальным распознаванием Whisper.
 
-open-wispr is a lightweight macOS app that provides push-to-talk voice dictation. Hold a hotkey, speak, release — transcribed text appears at your cursor in any app. It uses OpenAI's Whisper model running locally via whisper.cpp, so no audio or text ever leaves the machine.
+VoiceON — русская версия открытого проекта human37/open-wispr, распространяемая по лицензии MIT. Удерживайте клавишу 🌐 / fn, говорите и отпустите: приложение распознает речь на Mac и вставит текст в выбранное поле. Звук и распознанный текст не отправляются на сервер.
 
-## Key Facts
+## Основные сведения
 
-- **Price**: Free and open source (MIT license)
-- **Platform**: macOS (Apple Silicon and Intel)
-- **Privacy**: 100% on-device. Zero network requests. Default maxRecordings=0: temp file + immediate delete, and startup clears any older retained recordings. Set maxRecordings 1–100 to enable Recent Recordings.
-- **Install**: `brew install human37/open-wispr/open-wispr` or guided installer via `curl -fsSL https://open-wispr.com/install.sh | bash`
-- **Source**: https://github.com/human37/open-wispr
-- **Website**: https://open-wispr.com/
+- Название приложения: VoiceON.
+- Установочный файл: VoiceON.dmg.
+- Платформа готовой сборки: macOS 13 Ventura или новее, Apple Silicon M1 или новее.
+- Установка: открыть образ и перетащить VoiceON.app в папку «Программы».
+- Встроены: статически собранный whisper-cli, многоязычная модель base и модель определения речи Silero.
+- Язык интерфейса и распознавания по умолчанию: русский.
+- Готовая сборка не требует Homebrew и работает без интернета с включённой моделью.
+- Интернет требуется только для загрузки дополнительных моделей распознавания.
+- Репозиторий русской версии: https://github.com/rolexx671/VoiceON
+- Исходный проект: https://github.com/human37/open-wispr
+- Лицензия: MIT; исходный текст сохранён в LICENSE, ознакомительный перевод — в LICENSE.ru.md.
 
-## How It Works
+## Возможности
 
-1. Hold the Globe key (or a custom hotkey)
-2. Speak naturally
-3. Release — text is typed at your cursor via macOS Accessibility
+- Диктовка во время удержания клавиши или в режиме включения и выключения нажатием.
+- Значок состояния и меню на русском языке в строке меню macOS.
+- Вставка текста в активное поле; копирование в буфер обмена при отсутствии подходящего поля.
+- Копирование последней диктовки, выбор клавиши, модели и языка.
+- Необязательная локальная история записей и повторное распознавание.
+- Необязательные звуковые сигналы, определение речи и обработка голоса средствами macOS.
 
-## Features
+## Настройки
 
-- Works in any app (text editors, browsers, Slack, Terminal, etc.)
-- Multiple Whisper model sizes (tiny, base, small, medium, large)
-- Configurable hotkey, language, and model via `~/.config/open-wispr/config.json`
-- Runs as a background Homebrew service
-- No GUI, no menubar icon, no overhead
+Основные настройки доступны через значок VoiceON в строке меню; редактирование JSON не требуется.
 
-## Comparison to Alternatives
+- «Клавиша диктовки»: 🌐 / fn, правая Option, F5, Ctrl + пробел.
+- «Язык речи», «Модель», «Микрофон».
+- «Пунктуация голосом», «Определение речи (VAD)».
+- «Хранить последние записи»: не хранить либо 5, 10, 25, 50, 100 записей.
+- Режим записи по нажатию, звуковые сигналы, подавление шума и эха.
+- «Пользовательский словарь…» для нужных слов и имён.
 
-| Feature | open-wispr | Wispr Flow | Superwhisper | MacWhisper |
-|---|---|---|---|---|
-| Price | Free | $15/mo | $8.49/mo | $69 |
-| Open Source | Yes | No | No | No |
-| 100% Local | Yes | Yes | Yes | Yes |
-| Works in Any App | Yes | Yes | Yes | No (copy/paste) |
-| Install Method | Homebrew | DMG | DMG | App Store |
+Расширенные параметры находятся в файле: ~/.config/voiceon/config.json
 
-## Configuration
+Пример:
 
 ```json
 {
-  "model": "base",
-  "language": "en",
-  "hotkey": "globe",
-  "max_duration": 30
+  "hotkey": { "keyCode": 63, "modifiers": [] },
+  "modelSize": "base",
+  "language": "ru",
+  "maxRecordings": 0,
+  "toggleMode": false
 }
 ```
 
-Config file location: `~/.config/open-wispr/config.json`
+Названия параметров JSON и технические идентификаторы моделей не переводятся. Для русской речи нельзя использовать модели с суффиксом .en.
 
-## System Requirements
+## Разрешения
 
-- macOS 13 (Ventura) or later
-- Apple Silicon (M1+) or Intel Mac
-- ~150 MB disk space for the default Whisper model
-- Microphone and Accessibility permissions
+VoiceON требует доступа к микрофону и универсальному доступу. Путь в русской macOS: «Системные настройки» → «Конфиденциальность и безопасность» → «Микрофон» / «Универсальный доступ».
+
+Если клавиша 🌐 открывает эмодзи, в «Системные настройки» → «Клавиатура» следует выбрать «Ничего не делать» для действия при нажатии этой клавиши.
+
+## Документация
+
+- README.md — установка, использование и настройки.
+- docs/install-guide.md — пошаговая установка и решение проблем.
+- MODELS.md — модели распознавания и языки.
+- CONTRIBUTING.md — разработка и проверка изменений.
