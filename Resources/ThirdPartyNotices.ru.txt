@@ -1,0 +1,20 @@
+VoiceON основан на OpenWispr (https://github.com/human37/open-wispr).
+Лицензия MIT; оригинальный текст и сведения об авторстве: OpenWispr-MIT.txt.
+
+Встроен whisper.cpp v1.9.4, коммит 927cfce34f31707e17f2bff35c349632fb9e2c3a.
+https://github.com/ggml-org/whisper.cpp — лицензия MIT, whisper.cpp-MIT.txt.
+Движок статически скомпонован; системные библиотеки поставляются с macOS.
+
+Модель Whisper base (многоязычная), OpenAI, лицензия MIT:
+https://github.com/openai/whisper — Whisper-LICENSE.txt.
+Источник преобразованной модели:
+https://huggingface.co/ggerganov/whisper.cpp
+SHA-256: 60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe
+
+Модель Silero VAD 6.2.0, лицензия MIT — Silero-LICENSE.txt.
+https://github.com/snakers4/silero-vad
+Источник преобразованной модели: https://huggingface.co/ggml-org/whisper-vad
+SHA-256: 2aa269b785eeb53a82983a20501ddf7c1d9c48e33ab63a41391ac6c9f7fb6987
+
+Имена моделей, ключи настроек, команды API и оригинальные юридические
+уведомления сохраняются в исходном написании для совместимости.

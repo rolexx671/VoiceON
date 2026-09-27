@@ -60,10 +60,10 @@ final class AudioCaptureUnit {
         )
         guard let component = AudioComponentFindNext(nil, &description) else {
             throw NSError(domain: "OpenWispr.AudioRecorder", code: 1, userInfo: [
-                NSLocalizedDescriptionKey: "The macOS audio capture component is unavailable",
+                NSLocalizedDescriptionKey: "Компонент записи звука macOS недоступен",
             ])
         }
-        try Self.check(AudioComponentInstanceNew(component, &unit), "Create audio capture")
+        try Self.check(AudioComponentInstanceNew(component, &unit), "Создание устройства записи")
         guard let unit else { throw NSError(domain: NSOSStatusErrorDomain, code: Int(kAudioUnitErr_Uninitialized)) }
 
         if !voiceProcessing {
@@ -86,7 +86,7 @@ final class AudioCaptureUnit {
         var hardwareFormat = AudioStreamBasicDescription()
         var formatSize = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
         try Self.check(AudioUnitGetProperty(unit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 1,
-                                           &hardwareFormat, &formatSize), "Read microphone format")
+                                           &hardwareFormat, &formatSize), "Чтение формата микрофона")
         let clientFormat = try Self.clientFormat(voiceProcessing: voiceProcessing, hardwareSampleRate: hardwareFormat.mSampleRate)
         let format = clientFormat.streamDescription.pointee
         try set(kAudioUnitProperty_StreamFormat, scope: kAudioUnitScope_Output, bus: 1, value: format)
@@ -109,11 +109,11 @@ final class AudioCaptureUnit {
             }
         }
 
-        try Self.check(AudioUnitInitialize(unit), "Initialize audio capture")
+        try Self.check(AudioUnitInitialize(unit), "Инициализация записи")
         var maximumFrames: UInt32 = 0
         var size = UInt32(MemoryLayout<UInt32>.size)
         try Self.check(AudioUnitGetProperty(unit, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0,
-                                           &maximumFrames, &size), "Read audio buffer size")
+                                           &maximumFrames, &size), "Чтение размера звукового буфера")
         guard maximumFrames > 0,
               let buffer = AVAudioPCMBuffer(pcmFormat: clientFormat, frameCapacity: maximumFrames) else {
             throw NSError(domain: NSOSStatusErrorDomain, code: Int(kAudioUnitErr_FailedInitialization))
@@ -133,13 +133,13 @@ final class AudioCaptureUnit {
         do {
             var format = Self.fileFormat
             try Self.check(ExtAudioFileCreateWithURL(url as CFURL, kAudioFileWAVEType, &format, nil,
-                                                    AudioFileFlags.eraseFile.rawValue, &renderState.file), "Create recording")
+                                                    AudioFileFlags.eraseFile.rawValue, &renderState.file), "Создание записи")
             guard let file = renderState.file else { throw NSError(domain: NSOSStatusErrorDomain, code: Int(kAudioFileUnspecifiedError)) }
             var clientFormat = buffer.format.streamDescription.pointee
             try Self.check(ExtAudioFileSetProperty(file, kExtAudioFileProperty_ClientDataFormat,
-                                                   UInt32(MemoryLayout<AudioStreamBasicDescription>.size), &clientFormat), "Set recording format")
-            try Self.check(ExtAudioFileWriteAsync(file, 0, nil), "Prepare recording writer")
-            try Self.check(AudioOutputUnitStart(unit), "Start microphone")
+                                                   UInt32(MemoryLayout<AudioStreamBasicDescription>.size), &clientFormat), "Выбор формата записи")
+            try Self.check(ExtAudioFileWriteAsync(file, 0, nil), "Подготовка записи в файл")
+            try Self.check(AudioOutputUnitStart(unit), "Запуск микрофона")
         } catch {
             close()
             try? FileManager.default.removeItem(at: url)
@@ -149,16 +149,16 @@ final class AudioCaptureUnit {
 
     func stop() throws {
         guard let unit else { return }
-        try Self.check(AudioOutputUnitStop(unit), "Stop microphone")
+        try Self.check(AudioOutputUnitStop(unit), "Остановка микрофона")
         let fileStatus = renderState.closeFile()
-        try Self.check(fileStatus, "Finish recording")
-        try Self.check(renderState.captureError, "Capture microphone audio")
+        try Self.check(fileStatus, "Завершение записи")
+        try Self.check(renderState.captureError, "Запись с микрофона")
         guard renderState.framesWritten > 0 else {
             throw NSError(domain: "OpenWispr.AudioRecorder", code: 2, userInfo: [
-                NSLocalizedDescriptionKey: "The microphone did not deliver audio. Check the selected input device.",
+                NSLocalizedDescriptionKey: "Микрофон не передал звук. Проверьте выбранное устройство ввода.",
             ])
         }
-        print("Audio first buffer: \((renderState.firstBufferAt - renderState.requestedAt) / 1_000_000) ms; recorded \(renderState.framesWritten) frames")
+        print("Первый звуковой буфер: \((renderState.firstBufferAt - renderState.requestedAt) / 1_000_000) мс; записано кадров: \(renderState.framesWritten)")
     }
 
     private func observeDeviceChanges(route: AudioEngineCacheState.Route) throws {
@@ -169,7 +169,7 @@ final class AudioCaptureUnit {
                                                          mElement: kAudioObjectPropertyElementMain)
                 let state = cacheState
                 let listener: AudioObjectPropertyListenerBlock = { _, _ in state.invalidate() }
-                try Self.check(AudioObjectAddPropertyListenerBlock(device, &address, listenerQueue, listener), "Watch audio device")
+                try Self.check(AudioObjectAddPropertyListenerBlock(device, &address, listenerQueue, listener), "Наблюдение за звуковым устройством")
                 listeners.append((device, address, listener))
             }
         }
@@ -180,10 +180,10 @@ final class AudioCaptureUnit {
         var actual: AudioDeviceID = 0
         var size = UInt32(MemoryLayout<AudioDeviceID>.size)
         try Self.check(AudioUnitGetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, bus,
-                                           &actual, &size), "Read audio route")
+                                           &actual, &size), "Чтение звукового маршрута")
         guard actual == expected else {
             throw NSError(domain: "OpenWispr.AudioRecorder", code: 3, userInfo: [
-                NSLocalizedDescriptionKey: "macOS did not select the requested audio device",
+                NSLocalizedDescriptionKey: "macOS не выбрала запрошенное звуковое устройство",
             ])
         }
     }
@@ -192,7 +192,7 @@ final class AudioCaptureUnit {
         guard let unit else { return }
         var value = value
         try withUnsafePointer(to: &value) { pointer in
-            try Self.check(AudioUnitSetProperty(unit, property, scope, bus, pointer, UInt32(MemoryLayout<T>.size)), "Configure audio capture")
+            try Self.check(AudioUnitSetProperty(unit, property, scope, bus, pointer, UInt32(MemoryLayout<T>.size)), "Настройка записи звука")
         }
     }
 
@@ -210,7 +210,7 @@ final class AudioCaptureUnit {
             self.unit = nil
             guard status == noErr else {
                 cleanupFailed = true
-                print("Audio capture cleanup failed (status: \(status)). Restart OpenWispr.")
+                print("Ошибка освобождения устройства записи (код: \(status)). Перезапустите VoiceON.")
                 return
             }
             renderState.unit = nil
@@ -225,7 +225,7 @@ final class AudioCaptureUnit {
     private static func check(_ status: OSStatus, _ operation: String) throws {
         guard status == noErr else {
             throw NSError(domain: NSOSStatusErrorDomain, code: Int(status), userInfo: [
-                NSLocalizedDescriptionKey: "\(operation) failed (status: \(status))",
+                NSLocalizedDescriptionKey: "\(operation): ошибка (код: \(status))",
             ])
         }
     }

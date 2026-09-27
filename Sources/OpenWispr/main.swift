@@ -9,25 +9,26 @@ let version = OpenWispr.version
 
 func printUsage() {
     print("""
-    open-wispr v\(version) — Push-to-talk voice dictation for macOS
+    VoiceON, версия \(version) — Голосовой ввод для macOS
 
-    USAGE:
-        open-wispr start              Start the dictation daemon
-        open-wispr set-hotkey <key>   Set the push-to-talk hotkey
-        open-wispr get-hotkey         Show current hotkey
-        open-wispr set-model <size>   Set the Whisper model
-        open-wispr set-language <code>  Set the language (e.g. en, fr, auto)
-        open-wispr download-model [size]  Download a Whisper model
-        open-wispr status             Show configuration and status
-        open-wispr --help             Show this help message
+    ИСПОЛЬЗОВАНИЕ:
+        voiceon start              Запустить голосовой ввод
+        voiceon set-hotkey <клавиша>   Назначить клавишу диктовки
+        voiceon get-hotkey         Показать текущую клавишу
+        voiceon set-model <модель>   Выбрать модель Whisper
+        voiceon set-language <код>  Выбрать язык (например, ru, auto)
+        voiceon download-model [модель]  Скачать модель Whisper
+        voiceon transcribe <файл.wav>  Распознать речь из звукового файла
+        voiceon status             Показать настройки и состояние
+        voiceon --help             Показать эту справку
 
-    HOTKEY EXAMPLES:
-        open-wispr set-hotkey globe             Globe/fn key (default)
-        open-wispr set-hotkey rightoption        Right Option key
-        open-wispr set-hotkey f5                 F5 key
-        open-wispr set-hotkey ctrl+space         Ctrl + Space
+    ПРИМЕРЫ КЛАВИШ:
+        voiceon set-hotkey globe             Клавиша глобуса/fn (по умолчанию)
+        voiceon set-hotkey rightoption        Правая клавиша Option
+        voiceon set-hotkey f5                 Клавиша F5
+        voiceon set-hotkey ctrl+space         Ctrl + пробел
 
-    AVAILABLE MODELS:
+    ДОСТУПНЫЕ МОДЕЛИ:
         \(Config.supportedModels.joined(separator: ", "))
     """)
 }
@@ -36,25 +37,25 @@ func cmdStart() {
     let instanceLock: DaemonInstanceLock
     do {
         guard let acquiredLock = try DaemonInstanceLock.acquire() else {
-            fputs("OpenWispr is already running.\n", stderr)
+            fputs("VoiceON уже запущен.\n", stderr)
             exit(0)
         }
         instanceLock = acquiredLock
     } catch {
-        fputs("Error: could not acquire the OpenWispr instance lock: \(error.localizedDescription)\n", stderr)
+        fputs("Ошибка: не удалось заблокировать повторный запуск VoiceON: \(error.localizedDescription)\n", stderr)
         exit(1)
     }
 
     let app = NSApplication.shared
     let terminationResult = LegacyInstanceTerminator.terminatePreviousInstances()
     if terminationResult.foundCount > 0 {
-        print("Stopped \(terminationResult.foundCount) previous OpenWispr instance(s).")
+        print("Завершены предыдущие экземпляры VoiceON: \(terminationResult.foundCount).")
     }
     if !terminationResult.remainingProcessIdentifiers.isEmpty {
         let processList = terminationResult.remainingProcessIdentifiers
             .map(String.init)
             .joined(separator: ", ")
-        fputs("Could not stop previous OpenWispr process(es): \(processList).\n", stderr)
+        fputs("Не удалось завершить предыдущие процессы VoiceON: \(processList).\n", stderr)
         exit(0)
     }
     app.setActivationPolicy(.accessory)
@@ -63,7 +64,7 @@ func cmdStart() {
     app.delegate = delegate
 
     signal(SIGINT) { _ in
-        print("\nStopping open-wispr...")
+        print("\nЗавершение VoiceON…")
         exit(0)
     }
 
@@ -76,13 +77,13 @@ func cmdSetHotkey(_ keyString: String) {
     let keyNames = keyString.lowercased().split(separator: "+")
         .map { $0.trimmingCharacters(in: .whitespaces) }
     if keyNames.contains("capslock") {
-        print("Error: Caps Lock cannot be used as a hotkey because macOS toggles it instead of sending a key release. Choose another key.")
+        print("Ошибка: Caps Lock нельзя использовать для диктовки: macOS переключает её состояние и не сообщает об отпускании. Выберите другую клавишу.")
         exit(1)
     }
 
     guard let parsed = KeyCodes.parse(keyString) else {
-        print("Error: Unknown key '\(keyString)'")
-        print("Run 'open-wispr --help' for examples")
+        print("Ошибка: неизвестная клавиша '\(keyString)'")
+        print("Примеры: выполните «voiceon --help»")
         exit(1)
     }
 
@@ -92,17 +93,17 @@ func cmdSetHotkey(_ keyString: String) {
     do {
         try config.save()
         let desc = KeyCodes.describe(keyCode: parsed.keyCode, modifiers: parsed.modifiers)
-        print("Hotkey set to: \(desc)")
+        print("Клавиша диктовки: \(desc)")
     } catch {
-        print("Error saving config: \(error.localizedDescription)")
+        print("Не удалось сохранить настройки: \(error.localizedDescription)")
         exit(1)
     }
 }
 
 func cmdSetModel(_ size: String) {
     guard Config.supportedModels.contains(size) else {
-        print("Error: Unknown model '\(size)'")
-        print("Available: \(Config.supportedModels.joined(separator: ", "))")
+        print("Ошибка: неизвестная модель '\(size)'")
+        print("Доступны: \(Config.supportedModels.joined(separator: ", "))")
         exit(1)
     }
 
@@ -111,12 +112,12 @@ func cmdSetModel(_ size: String) {
 
     do {
         try config.save()
-        print("Model set to: \(size)")
+        print("Выбрана модель: \(size)")
         if !Transcriber.modelExists(modelSize: size) {
-            print("Model will be downloaded on next start.")
+            print("Модель будет скачана при следующем запуске.")
         }
     } catch {
-        print("Error saving config: \(error.localizedDescription)")
+        print("Не удалось сохранить настройки: \(error.localizedDescription)")
         exit(1)
     }
 }
@@ -124,9 +125,9 @@ func cmdSetModel(_ size: String) {
 func cmdSetLanguage(_ lang: String) {
     let validCodes = Config.supportedLanguages.map { $0.code }
     guard validCodes.contains(lang) else {
-        print("Error: Unknown language '\(lang)'")
-        print("Available: auto, en, fr, de, es, zh, ja, ko, pt, it, nl, ru, ...")
-        print("See full list: https://github.com/human37/open-wispr")
+        print("Ошибка: неизвестный язык '\(lang)'")
+        print("Доступны: auto, en, fr, de, es, zh, ja, ko, pt, it, nl, ru, ...")
+        print("Полный список: https://github.com/rolexx671/VoiceON")
         exit(1)
     }
 
@@ -136,9 +137,9 @@ func cmdSetLanguage(_ lang: String) {
     do {
         try config.save()
         let name = Config.supportedLanguages.first(where: { $0.code == lang })?.name ?? lang
-        print("Language set to: \(name) (\(lang))")
+        print("Выбран язык: \(name) (\(lang))")
     } catch {
-        print("Error saving config: \(error.localizedDescription)")
+        print("Не удалось сохранить настройки: \(error.localizedDescription)")
         exit(1)
     }
 }
@@ -146,14 +147,36 @@ func cmdSetLanguage(_ lang: String) {
 func cmdGetHotkey() {
     let config = Config.load()
     let desc = config.hotkeySummary()
-    print("Current hotkey: \(desc)")
+    print("Текущая клавиша: \(desc)")
 }
 
 func cmdDownloadModel(_ size: String) {
+    guard Config.supportedModels.contains(size) else {
+        print("Ошибка: неизвестная модель «\(size)»")
+        exit(1)
+    }
     do {
         try ModelDownloader.download(modelSize: size)
     } catch {
-        print("Error: \(error.localizedDescription)")
+        print("Ошибка: \(error.localizedDescription)")
+        exit(1)
+    }
+}
+
+func cmdTranscribe(_ path: String) {
+    let config = Config.load()
+    let transcriber = Transcriber(modelSize: config.modelSize, language: config.language,
+                                  whisperPrompt: config.whisperPrompt,
+                                  vadEnabled: config.isVADEnabled, vadThreshold: config.effectiveVADThreshold)
+    transcriber.spokenPunctuation = config.spokenPunctuation?.value ?? false
+    transcriber.customDictionary = config.customDictionary ?? []
+    do {
+        var text = try transcriber.transcribe(audioURL: URL(fileURLWithPath: path))
+        if transcriber.spokenPunctuation { text = TextPostProcessor.process(text) }
+        text = DictionaryPostProcessor.process(text, dictionary: transcriber.customDictionary)
+        print(text)
+    } catch {
+        print("Ошибка: \(error.localizedDescription)")
         exit(1)
     }
 }
@@ -162,16 +185,16 @@ func cmdStatus() {
     let config = Config.load()
     let hotkeyDesc = config.hotkeySummary()
 
-    print("open-wispr v\(version)")
-    print("Config:      \(Config.configFile.path)")
-    print("Hotkey:      \(hotkeyDesc)")
-    print("Model:       \(config.modelSize)")
-    print("Model ready: \(Transcriber.modelExists(modelSize: config.modelSize) ? "yes" : "no")")
-    print("whisper-cpp: \(Transcriber.findWhisperBinary() != nil ? "yes" : "no")")
+    print("VoiceON, версия \(version)")
+    print("Настройки:      \(Config.configFile.path)")
+    print("Клавиша:      \(hotkeyDesc)")
+    print("Модель:       \(config.modelSize)")
+    print("Модель готова: \(Transcriber.modelExists(modelSize: config.modelSize) ? "да" : "нет")")
+    print("whisper-cpp: \(Transcriber.findWhisperBinary() != nil ? "да" : "нет")")
     let langName = Config.supportedLanguages.first(where: { $0.code == config.language })?.name ?? config.language
-    print("Language:    \(langName) (\(config.language))")
+    print("Язык:    \(langName) (\(config.language))")
     let toggleMode = config.toggleMode?.value ?? false
-    print("Toggle:      \(toggleMode ? "on (press to start/stop)" : "off (hold to talk)")")
+    print("Переключение:      \(toggleMode ? "вкл. (нажатие начинает и завершает запись)" : "выкл. (удерживайте для записи)")")
 }
 
 let args = CommandLine.arguments
@@ -189,36 +212,46 @@ case "start":
     cmdStart()
 case "set-hotkey":
     guard args.count > 2 else {
-        print("Usage: open-wispr set-hotkey <key>")
+        print("Использование: voiceon set-hotkey <клавиша>")
         exit(1)
     }
     cmdSetHotkey(args[2])
 case "set-model":
     guard args.count > 2 else {
-        print("Usage: open-wispr set-model <size>")
+        print("Использование: voiceon set-model <модель>")
         exit(1)
     }
     cmdSetModel(args[2])
 case "set-language":
     guard args.count > 2 else {
-        print("Usage: open-wispr set-language <code>")
-        print("Examples: en, fr, auto")
+        print("Использование: voiceon set-language <код>")
+        print("Примеры: ru, en, auto")
         exit(1)
     }
     cmdSetLanguage(args[2])
 case "get-hotkey":
     cmdGetHotkey()
 case "download-model":
-    let size = args.count > 2 ? args[2] : "base.en"
+    let size = args.count > 2 ? args[2] : Config.defaultConfig.modelSize
     cmdDownloadModel(size)
 case "status":
     cmdStatus()
+case "transcribe":
+    guard args.count > 2 else {
+        print("Использование: voiceon transcribe <файл.wav>")
+        exit(1)
+    }
+    cmdTranscribe(args[2])
 case "--help", "-h", "help":
     printUsage()
 case nil:
-    printUsage()
+    if AppBundleLaunch.isExecutableInsideAppBundle(args[0]) {
+        cmdStart()
+    } else {
+        printUsage()
+    }
 default:
-    print("Unknown command: \(command!)")
+    print("Неизвестная команда: \(command!)")
     printUsage()
     exit(1)
 }

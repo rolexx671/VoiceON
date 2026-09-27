@@ -21,14 +21,14 @@ public class RecordingStore {
         do {
             try FileManager.default.createDirectory(at: recordingsDir, withIntermediateDirectories: true)
         } catch {
-            fputs("Warning: could not create recordings directory: \(error.localizedDescription)\n", stderr)
+            fputs("Не удалось создать каталог записей: \(error.localizedDescription)\n", stderr)
         }
     }
 
     public static func tempRecordingURL() -> URL {
         let unique = String(UUID().uuidString.prefix(8))
         return FileManager.default.temporaryDirectory
-            .appendingPathComponent("open-wispr-recording-\(unique).wav")
+            .appendingPathComponent("voiceon-recording-\(unique).wav")
     }
 
     public static func newRecordingURL() -> URL {
@@ -67,7 +67,7 @@ public class RecordingStore {
             do {
                 try FileManager.default.removeItem(at: recording.url)
             } catch {
-                fputs("Warning: could not remove old recording \(recording.url.path): \(error.localizedDescription)\n", stderr)
+                fputs("Не удалось удалить старую запись \(recording.url.path): \(error.localizedDescription)\n", stderr)
             }
         }
     }
@@ -77,7 +77,7 @@ public class RecordingStore {
             do {
                 try FileManager.default.removeItem(at: recording.url)
             } catch {
-                fputs("Warning: could not remove recording \(recording.url.path): \(error.localizedDescription)\n", stderr)
+                fputs("Не удалось удалить запись \(recording.url.path): \(error.localizedDescription)\n", stderr)
             }
         }
     }

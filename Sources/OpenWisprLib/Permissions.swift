@@ -7,17 +7,17 @@ struct Permissions {
     static func ensureMicrophone() {
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
         case .authorized:
-            print("Microphone: granted")
+            print("Микрофон: доступ разрешён")
         case .notDetermined:
-            print("Microphone: requesting...")
+            print("Микрофон: запрос доступа…")
             let semaphore = DispatchSemaphore(value: 0)
             AVCaptureDevice.requestAccess(for: .audio) { granted in
-                print("Microphone: \(granted ? "granted" : "denied")")
+                print("Микрофон: \(granted ? "доступ разрешён" : "доступ запрещён")")
                 semaphore.signal()
             }
             semaphore.wait()
         default:
-            print("Microphone: denied — grant in System Settings → Privacy & Security → Microphone")
+            print("Микрофон: доступ запрещён. Разрешите его в Системных настройках → Конфиденциальность и безопасность → Микрофон")
         }
     }
 
@@ -33,7 +33,7 @@ struct Permissions {
     static func resetAccessibility() -> Bool {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
-        process.arguments = ["reset", "Accessibility", "com.human37.open-wispr"]
+        process.arguments = ["reset", "Accessibility", Bundle.main.bundleIdentifier ?? "com.voiceon.app"]
         do {
             try process.run()
             process.waitUntilExit()
@@ -58,7 +58,7 @@ struct Permissions {
         do {
             try recordCurrentVersion(to: versionFile, version: OpenWispr.version)
         } catch {
-            print("Accessibility: could not record current version: \(error.localizedDescription)")
+            print("Универсальный доступ: не удалось сохранить текущую версию: \(error.localizedDescription)")
         }
     }
 
@@ -70,8 +70,7 @@ struct Permissions {
     }
 
     private static var versionFile: URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".config/open-wispr/.last-version")
+        Config.configDir.appendingPathComponent(".last-version")
     }
 
     static func openAccessibilitySettings() {

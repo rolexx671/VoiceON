@@ -35,7 +35,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         do {
             try setupInner()
         } catch {
-            print("Fatal setup error: \(error.localizedDescription)")
+            print("Не удалось запустить приложение: \(error.localizedDescription)")
             DispatchQueue.main.async { [weak self] in
                 self?.statusBar.state = .error(error.localizedDescription)
                 self?.statusBar.updateDownloadProgress(nil)
@@ -68,26 +68,31 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if Transcriber.findWhisperBinary() == nil {
-            print("Error: whisper-cpp not found. Install it with: brew install whisper-cpp")
+            let message = "Не найден модуль распознавания речи. Переустановите VoiceON из образа VoiceON.dmg."
+            print(message)
+            DispatchQueue.main.async { [weak self] in
+                self?.statusBar.state = .error(message)
+                self?.statusBar.buildMenu()
+            }
             return
         }
 
         let didUpgrade = Permissions.didUpgrade()
         if Permissions.shouldResetAccessibility(afterUpgrade: didUpgrade, isTrusted: AXIsProcessTrusted()) {
-            print("Accessibility: version changed and permission is not granted; resetting stale entry...")
+            print("Универсальный доступ: версия обновилась, но доступ не разрешён; сброс прежнего разрешения…")
             if Permissions.resetAccessibility() {
                 Permissions.recordCurrentVersion()
                 Thread.sleep(forTimeInterval: 1)
             } else {
-                print("Accessibility: reset failed; toggle OpenWispr OFF, then ON in System Settings")
+                print("Универсальный доступ: не удалось сбросить разрешение. В Системных настройках выключите и снова включите доступ для VoiceON")
             }
         }
 
         Permissions.ensureMicrophone()
 
         if !AXIsProcessTrusted() {
-            print("Accessibility: not granted")
-            print("Waiting for Accessibility permission...")
+            print("Универсальный доступ: не разрешён")
+            print("Ожидание разрешения универсального доступа…")
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.statusBar.state = .waitingForPermission
@@ -99,7 +104,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        print("Accessibility: granted")
+        print("Универсальный доступ: разрешён")
         Permissions.recordCurrentVersion()
         try finishSetup()
     }
@@ -116,14 +121,14 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         guard AXIsProcessTrusted() else { return }
         accessibilityPollTimer?.invalidate()
         accessibilityPollTimer = nil
-        print("Accessibility: granted")
+        print("Универсальный доступ: разрешён")
         Permissions.recordCurrentVersion()
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
             do {
                 try self.finishSetup()
             } catch {
-                print("Fatal setup error: \(error.localizedDescription)")
+                print("Не удалось запустить приложение: \(error.localizedDescription)")
             }
         }
     }
@@ -132,13 +137,13 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         if !Transcriber.modelExists(modelSize: config.modelSize) {
             DispatchQueue.main.async {
                 self.statusBar.state = .downloading
-                self.statusBar.updateDownloadProgress("Downloading \(self.config.modelSize) model...")
+                self.statusBar.updateDownloadProgress("Загрузка модели \(StatusBarController.modelDisplayName(self.config.modelSize))…")
             }
-            print("Downloading \(config.modelSize) model...")
+            print("Загрузка модели \(StatusBarController.modelDisplayName(config.modelSize))…")
             try ModelDownloader.download(modelSize: config.modelSize) { [weak self] percent in
                 DispatchQueue.main.async {
                     let pct = Int(percent)
-                    self?.statusBar.updateDownloadProgress("Downloading \(self?.config.modelSize ?? "") model... \(pct)%", percent: percent)
+                    self?.statusBar.updateDownloadProgress("Загрузка модели \(StatusBarController.modelDisplayName(self?.config.modelSize ?? ""))… \(pct)%", percent: percent)
                 }
             }
             DispatchQueue.main.async {
@@ -149,8 +154,8 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         if let modelPath = Transcriber.findModel(modelSize: config.modelSize) {
             let modelURL = URL(fileURLWithPath: modelPath)
             if !ModelDownloader.isValidGGMLFile(at: modelURL) {
-                let msg = "Model file is corrupted. Re-download with: open-wispr download-model \(config.modelSize)"
-                print("Error: \(msg)")
+                let msg = "Файл модели повреждён. Повторно загрузите его командой: voiceon download-model \(config.modelSize)"
+                print("Ошибка: \(msg)")
                 DispatchQueue.main.async {
                     self.statusBar.state = .error(msg)
                     self.statusBar.buildMenu()
@@ -162,11 +167,11 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         if config.isVADEnabled && Transcriber.findVADModel() == nil {
             DispatchQueue.main.async {
                 self.statusBar.state = .downloading
-                self.statusBar.updateDownloadProgress("Downloading voice activity model...")
+                self.statusBar.updateDownloadProgress("Загрузка модели определения речи…")
             }
             try ModelDownloader.downloadVAD { [weak self] percent in
                 DispatchQueue.main.async {
-                    self?.statusBar.updateDownloadProgress("Downloading voice activity model... \(Int(percent))%", percent: percent)
+                    self?.statusBar.updateDownloadProgress("Загрузка модели определения речи… \(Int(percent))%", percent: percent)
                 }
             }
             DispatchQueue.main.async { self.statusBar.updateDownloadProgress(nil) }
@@ -201,10 +206,10 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         statusBar.buildMenu()
 
         let hotkeyDesc = config.hotkeySummary()
-        print("open-wispr v\(OpenWispr.version)")
-        print("Hotkey: \(hotkeyDesc)")
-        print("Model: \(config.modelSize)")
-        print("Ready.")
+        print("VoiceON, версия \(OpenWispr.version)")
+        print("Клавиша записи: \(hotkeyDesc)")
+        print("Модель: \(config.modelSize)")
+        print("Готово к записи.")
         recorder.prepare()
     }
 
@@ -258,24 +263,24 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         if !wasDownloading && (needsWhisperModel || needsVADModel) {
             statusBar.state = .downloading
             statusBar.updateDownloadProgress(needsWhisperModel
-                ? "Downloading \(config.modelSize) model..."
-                : "Downloading voice activity model...")
+                ? "Загрузка модели \(StatusBarController.modelDisplayName(config.modelSize))…"
+                : "Загрузка модели определения речи…")
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 do {
                     if needsWhisperModel {
                         try ModelDownloader.download(modelSize: newConfig.modelSize) { percent in
                             DispatchQueue.main.async {
-                                self?.statusBar.updateDownloadProgress("Downloading \(newConfig.modelSize) model... \(Int(percent))%", percent: percent)
+                                self?.statusBar.updateDownloadProgress("Загрузка модели \(StatusBarController.modelDisplayName(newConfig.modelSize))… \(Int(percent))%", percent: percent)
                             }
                         }
                     }
                     if needsVADModel {
                         DispatchQueue.main.async {
-                            self?.statusBar.updateDownloadProgress("Downloading voice activity model...")
+                            self?.statusBar.updateDownloadProgress("Загрузка модели определения речи…")
                         }
                         try ModelDownloader.downloadVAD { percent in
                             DispatchQueue.main.async {
-                                self?.statusBar.updateDownloadProgress("Downloading voice activity model... \(Int(percent))%", percent: percent)
+                                self?.statusBar.updateDownloadProgress("Загрузка модели определения речи… \(Int(percent))%", percent: percent)
                             }
                         }
                     }
@@ -285,7 +290,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
                     }
                 } catch {
                     DispatchQueue.main.async {
-                        print("Error downloading model: \(error.localizedDescription)")
+                        print("Не удалось загрузить модель: \(error.localizedDescription)")
                         self?.statusBar.state = .error(error.localizedDescription)
                         self?.statusBar.buildMenu()
                     }
@@ -296,7 +301,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         statusBar.buildMenu()
 
         let hotkeyDesc = config.hotkeySummary()
-        print("Config updated: lang=\(config.language) model=\(config.modelSize) hotkey=\(hotkeyDesc)")
+        print("Настройки обновлены: язык=\(config.language), модель=\(config.modelSize), клавиша записи=\(hotkeyDesc)")
     }
 
     private func makeTranscriber(for config: Config) -> Transcriber {
@@ -356,7 +361,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
                 recordingSoundFeedback.playStarted()
             }
         } catch {
-            print("Error: \(error.localizedDescription)")
+            print("Ошибка: \(error.localizedDescription)")
             recordingLifecycle.recordingStartFailed()
             currentRecordingURL = nil
             statusBar.state = .idle
@@ -413,7 +418,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
                     RecordingStore.prune(maxCount: maxRecordings)
                 }
                 DispatchQueue.main.async {
-                    print("Error: \(error.localizedDescription)")
+                    print("Ошибка: \(error.localizedDescription)")
                     self.statusBar.state = .error(error.localizedDescription)
                     self.statusBar.buildMenu()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
@@ -514,7 +519,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             } catch {
                 DispatchQueue.main.async {
-                    print("Reprocess error: \(error.localizedDescription)")
+                    print("Не удалось повторно распознать запись: \(error.localizedDescription)")
                     self.statusBar.state = .idle
                 }
             }

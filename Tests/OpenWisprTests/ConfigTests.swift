@@ -314,7 +314,32 @@ final class ConfigTests: XCTestCase {
     }
 
     func testSupportedModelsContainsDefault() {
-        XCTAssertTrue(Config.supportedModels.contains("base.en"))
+        XCTAssertTrue(Config.supportedModels.contains(Config.defaultConfig.modelSize))
+    }
+
+    func testDefaultConfigUsesRussianAndMultilingualModel() throws {
+        let config = Config.defaultConfig
+        XCTAssertEqual(config.language, "ru")
+        XCTAssertEqual(config.modelSize, "base")
+        XCTAssertFalse(Config.isEnglishOnlyModel(config.modelSize))
+        let decoded = try Config.decode(from: JSONEncoder().encode(config))
+        XCTAssertEqual(decoded.language, "ru")
+        XCTAssertEqual(decoded.modelSize, "base")
+    }
+
+    func testLanguageNamesAreTranslatedWithoutChangingCodes() {
+        XCTAssertEqual(Config.supportedLanguages.first(where: { $0.code == "ru" })?.name, "Русский")
+        XCTAssertEqual(Config.supportedLanguages.first(where: { $0.code == "auto" })?.name, "Определять автоматически")
+        XCTAssertEqual(Set(Config.supportedLanguages.map(\.code)).count, Config.supportedLanguages.count)
+        for language in Config.supportedLanguages {
+            XCTAssertNil(language.name.range(of: "[A-Za-z]", options: .regularExpression), language.code)
+        }
+    }
+
+    func testVoiceONStoresItsOwnConfiguration() {
+        let expected = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".config/voiceon")
+        XCTAssertEqual(Config.configDir, expected)
+        XCTAssertEqual(Config.configFile, expected.appendingPathComponent("config.json"))
     }
 
     // MARK: - Model alias resolution

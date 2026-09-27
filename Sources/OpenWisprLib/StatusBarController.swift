@@ -41,6 +41,8 @@ class StatusBarController: NSObject {
         if let button = statusItem.button {
             button.image = StatusBarController.drawLogo(active: false)
             button.image?.isTemplate = true
+            button.toolTip = "VoiceON — голосовой ввод текста"
+            button.setAccessibilityLabel("VoiceON — голосовой ввод текста")
         }
 
         buildMenu()
@@ -69,7 +71,7 @@ class StatusBarController: NSObject {
         if let text = text, let item = stateMenuItem {
             let config = Config.load()
             let hotkeyDesc = config.hotkeySummary()
-            item.title = "\(text) (hotkey: \(hotkeyDesc))"
+            item.title = "\(text) (клавиша: \(hotkeyDesc))"
         } else {
             buildMenu()
         }
@@ -77,6 +79,7 @@ class StatusBarController: NSObject {
 
     private static let displayDateFormatter: DateFormatter = {
         let f = DateFormatter()
+        f.locale = Locale(identifier: "ru_RU")
         f.dateStyle = .medium
         f.timeStyle = .short
         return f
@@ -90,7 +93,7 @@ class StatusBarController: NSObject {
 
         let menu = NSMenu()
 
-        let titleItem = NSMenuItem(title: "OpenWispr v\(OpenWispr.version)", action: nil, keyEquivalent: "")
+        let titleItem = NSMenuItem(title: "VoiceON, версия \(OpenWispr.version)", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
 
@@ -101,13 +104,13 @@ class StatusBarController: NSObject {
             stateLabel = progress
         } else {
             switch state {
-            case .idle: stateLabel = "Ready"
-            case .recording: stateLabel = "Recording..."
-            case .transcribing: stateLabel = "Transcribing..."
-            case .downloading: stateLabel = "Downloading model..."
-            case .waitingForPermission: stateLabel = "Waiting for Accessibility permission..."
-            case .copiedToClipboard: stateLabel = "Copied to clipboard"
-            case .error(let message): stateLabel = "Error: \(message)"
+            case .idle: stateLabel = "Готово к записи"
+            case .recording: stateLabel = "Идёт запись…"
+            case .transcribing: stateLabel = "Распознавание речи…"
+            case .downloading: stateLabel = "Загрузка модели…"
+            case .waitingForPermission: stateLabel = "Ожидание доступа к универсальному доступу…"
+            case .copiedToClipboard: stateLabel = "Скопировано в буфер обмена"
+            case .error(let message): stateLabel = "Ошибка: \(message)"
             }
         }
         if case .waitingForPermission = state {
@@ -115,15 +118,15 @@ class StatusBarController: NSObject {
                 Permissions.openAccessibilitySettings()
             }
             menuItemTargets.append(target)
-            let stateItem = NSMenuItem(title: "Grant Accessibility Permission...", action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
+            let stateItem = NSMenuItem(title: "Разрешить универсальный доступ…", action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
             stateItem.target = target
             menu.addItem(stateItem)
             stateMenuItem = stateItem
-            let recoveryItem = NSMenuItem(title: "If already ON, toggle OpenWispr OFF, then ON", action: nil, keyEquivalent: "")
+            let recoveryItem = NSMenuItem(title: "Если доступ уже разрешён, выключите и снова включите VoiceON", action: nil, keyEquivalent: "")
             recoveryItem.isEnabled = false
             menu.addItem(recoveryItem)
         } else {
-            let stateItem = NSMenuItem(title: "\(stateLabel) (hotkey: \(hotkeyDesc))", action: nil, keyEquivalent: "")
+            let stateItem = NSMenuItem(title: "\(stateLabel) (клавиша: \(hotkeyDesc))", action: nil, keyEquivalent: "")
             stateItem.isEnabled = false
             menu.addItem(stateItem)
             stateMenuItem = stateItem
@@ -133,7 +136,7 @@ class StatusBarController: NSObject {
 
         let currentLang = config.language
         let langName = Config.supportedLanguages.first(where: { $0.code == currentLang })?.name ?? currentLang
-        let langItem = NSMenuItem(title: "Language: \(langName)", action: nil, keyEquivalent: "")
+        let langItem = NSMenuItem(title: "Язык речи: \(langName)", action: nil, keyEquivalent: "")
         let langSubmenu = NSMenu()
 
         for (index, lang) in Config.supportedLanguages.enumerated() {
@@ -143,12 +146,12 @@ class StatusBarController: NSObject {
             let target = MenuItemTarget { [weak self] in
                 var cfg = Config.load()
                 cfg.language = lang.code
-                if lang.code != "en" && cfg.modelSize.hasSuffix(".en") {
-                    let base = String(cfg.modelSize.dropLast(3))
+                if lang.code != "en" && Config.isEnglishOnlyModel(cfg.modelSize) {
+                    let base = cfg.modelSize.components(separatedBy: ".en")[0]
                     if Config.supportedModels.contains(base) {
                         cfg.modelSize = base
                     }
-                } else if lang.code == "en" && !cfg.modelSize.hasSuffix(".en") {
+                } else if lang.code == "en" && !Config.isEnglishOnlyModel(cfg.modelSize) {
                     let enVariant = cfg.modelSize + ".en"
                     if Config.supportedModels.contains(enVariant) {
                         cfg.modelSize = enVariant
@@ -169,13 +172,13 @@ class StatusBarController: NSObject {
         langItem.submenu = langSubmenu
         menu.addItem(langItem)
 
-        let modelItem = NSMenuItem(title: "Model: \(config.modelSize)", action: nil, keyEquivalent: "")
+        let modelItem = NSMenuItem(title: "Модель: \(Self.modelDisplayName(config.modelSize))", action: nil, keyEquivalent: "")
         let modelSubmenu = NSMenu()
 
         let englishModels = Config.supportedModels.filter { Config.isEnglishOnlyModel($0) }
         let multilingualModels = Config.supportedModels.filter { !Config.isEnglishOnlyModel($0) }
 
-        let engHeader = NSMenuItem(title: "English", action: nil, keyEquivalent: "")
+        let engHeader = NSMenuItem(title: "Только английский язык", action: nil, keyEquivalent: "")
         engHeader.isEnabled = false
         modelSubmenu.addItem(engHeader)
 
@@ -190,7 +193,7 @@ class StatusBarController: NSObject {
                 self?.onConfigChange?(cfg)
             }
             self.menuItemTargets.append(target)
-            let item = NSMenuItem(title: "  \(model)", action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
+            let item = NSMenuItem(title: "  \(Self.modelDisplayName(model))", action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
             item.target = target
             if model == config.modelSize {
                 item.state = .on
@@ -200,7 +203,7 @@ class StatusBarController: NSObject {
 
         modelSubmenu.addItem(NSMenuItem.separator())
 
-        let multiHeader = NSMenuItem(title: "Multilingual", action: nil, keyEquivalent: "")
+        let multiHeader = NSMenuItem(title: "Многоязычные — подходят для русского", action: nil, keyEquivalent: "")
         multiHeader.isEnabled = false
         modelSubmenu.addItem(multiHeader)
 
@@ -212,7 +215,7 @@ class StatusBarController: NSObject {
                 self?.onConfigChange?(cfg)
             }
             self.menuItemTargets.append(target)
-            let item = NSMenuItem(title: "  \(model)", action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
+            let item = NSMenuItem(title: "  \(Self.modelDisplayName(model))", action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
             item.target = target
             if model == config.modelSize {
                 item.state = .on
@@ -229,8 +232,8 @@ class StatusBarController: NSObject {
             if let id = config.audioInputDeviceID { return device.id == id }
             return false
         })
-        let currentDeviceName = selectedDevice?.name ?? "System Default"
-        let audioItem = NSMenuItem(title: "Audio Input: \(currentDeviceName)", action: nil, keyEquivalent: "")
+        let currentDeviceName = selectedDevice?.name ?? "Системный по умолчанию"
+        let audioItem = NSMenuItem(title: "Микрофон: \(currentDeviceName)", action: nil, keyEquivalent: "")
         let audioSubmenu = NSMenu()
         audioSubmenu.autoenablesItems = false
 
@@ -242,7 +245,7 @@ class StatusBarController: NSObject {
             self?.onConfigChange?(cfg)
         }
         menuItemTargets.append(defaultTarget)
-        let defaultItem = NSMenuItem(title: "System Default", action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
+        let defaultItem = NSMenuItem(title: "Системный по умолчанию", action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
         defaultItem.target = defaultTarget
         if config.audioInputDeviceID == nil && config.audioInputDeviceUID == nil {
             defaultItem.state = .on
@@ -281,8 +284,9 @@ class StatusBarController: NSObject {
             self?.onConfigChange?(cfg)
         }
         menuItemTargets.append(toggleTarget)
-        let toggleItem = NSMenuItem(title: "Toggle Mode", action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
+        let toggleItem = NSMenuItem(title: "Запись по нажатию вместо удержания", action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
         toggleItem.target = toggleTarget
+        toggleItem.toolTip = "Включено: нажмите клавишу записи для начала и ещё раз для окончания. Выключено: удерживайте клавишу во время речи."
         toggleItem.state = (config.toggleMode?.value ?? false) ? .on : .off
         menu.addItem(toggleItem)
 
@@ -293,7 +297,7 @@ class StatusBarController: NSObject {
             self?.onConfigChange?(cfg)
         }
         menuItemTargets.append(soundTarget)
-        let soundItem = NSMenuItem(title: "Recording Sounds", action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
+        let soundItem = NSMenuItem(title: "Звуки начала и окончания записи", action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
         soundItem.target = soundTarget
         soundItem.state = config.isSoundFeedbackEnabled ? .on : .off
         menu.addItem(soundItem)
@@ -305,8 +309,9 @@ class StatusBarController: NSObject {
             self?.onConfigChange?(cfg)
         }
         menuItemTargets.append(voiceTarget)
-        let voiceItem = NSMenuItem(title: "Voice Processing (slower)", action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
+        let voiceItem = NSMenuItem(title: "Подавление шума и эха (медленнее)", action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
         voiceItem.target = voiceTarget
+        voiceItem.toolTip = "Снижает фоновый шум и эхо. Может увеличить задержку. Требуется macOS 14 или новее."
         voiceItem.state = config.isVoiceProcessingEnabled ? .on : .off
         if #available(macOS 14.0, *) {
             voiceItem.isEnabled = true
@@ -321,14 +326,14 @@ class StatusBarController: NSObject {
             NSApp.activate(ignoringOtherApps: true)
         }
         menuItemTargets.append(dictTarget)
-        let dictItem = NSMenuItem(title: "Custom Dictionary...", action: #selector(MenuItemTarget.invoke), keyEquivalent: "d")
+        let dictItem = NSMenuItem(title: "Пользовательский словарь…", action: #selector(MenuItemTarget.invoke), keyEquivalent: "d")
         dictItem.target = dictTarget
         menu.addItem(dictItem)
 
         menu.addItem(NSMenuItem.separator())
 
         let lastText = (NSApplication.shared.delegate as? AppDelegate)?.lastTranscription
-        let copyTitle = copiedFeedback ? "Copied!" : "Copy Last Dictation"
+        let copyTitle = copiedFeedback ? "Скопировано!" : "Скопировать последний текст"
         let copyItem = NSMenuItem(title: copyTitle, action: lastText != nil && !copiedFeedback ? #selector(copyLastTranscription) : nil, keyEquivalent: "c")
         copyItem.target = self
         if lastText == nil || copiedFeedback { copyItem.isEnabled = copiedFeedback }
@@ -336,11 +341,11 @@ class StatusBarController: NSObject {
 
         if Config.effectiveMaxRecordings(config.maxRecordings) > 0 {
             let recordings = RecordingStore.listRecordings()
-            let reprocessItem = NSMenuItem(title: "Recent Recordings", action: nil, keyEquivalent: "")
+            let reprocessItem = NSMenuItem(title: "Последние записи", action: nil, keyEquivalent: "")
             let submenu = NSMenu()
 
             if recordings.isEmpty {
-                let emptyItem = NSMenuItem(title: "No recordings", action: nil, keyEquivalent: "")
+                let emptyItem = NSMenuItem(title: "Записей пока нет", action: nil, keyEquivalent: "")
                 emptyItem.isEnabled = false
                 submenu.addItem(emptyItem)
             } else {
@@ -353,6 +358,7 @@ class StatusBarController: NSObject {
                     menuItemTargets.append(target)
                     let item = NSMenuItem(title: label, action: #selector(MenuItemTarget.invoke), keyEquivalent: "")
                     item.target = target
+                    item.toolTip = "Распознать эту запись ещё раз и скопировать текст в буфер обмена"
                     submenu.addItem(item)
                 }
             }
@@ -363,18 +369,68 @@ class StatusBarController: NSObject {
 
         menu.addItem(NSMenuItem.separator())
 
-        let reloadItem = NSMenuItem(title: "Reload Configuration", action: #selector(reloadConfiguration), keyEquivalent: "r")
+        let reloadItem = NSMenuItem(title: "Применить настройки из файла", action: #selector(reloadConfiguration), keyEquivalent: "r")
         reloadItem.target = self
         menu.addItem(reloadItem)
 
-        let openItem = NSMenuItem(title: "Open Configuration", action: #selector(openConfiguration), keyEquivalent: "o")
+        let openItem = NSMenuItem(title: "Открыть файл настроек…", action: #selector(openConfiguration), keyEquivalent: "o")
         openItem.target = self
         menu.addItem(openItem)
 
+        let helpItem = NSMenuItem(title: "Как пользоваться VoiceON…", action: #selector(showHelp), keyEquivalent: "?")
+        helpItem.target = self
+        menu.addItem(helpItem)
+
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Завершить VoiceON", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
         statusItem.menu = menu
+    }
+
+    static func modelDisplayName(_ model: String) -> String {
+        let components = model.components(separatedBy: "-q")
+        let modelName = components[0]
+        let englishOnly = Config.isEnglishOnlyModel(model)
+        let base = modelName.hasSuffix(".en") ? String(modelName.dropLast(3)) : modelName
+        let name: String
+        switch base {
+        case "tiny": name = "Минимальная"
+        case "base": name = "Базовая"
+        case "small": name = "Небольшая"
+        case "medium": name = "Средняя"
+        case "large-v1": name = "Большая, версия 1"
+        case "large-v2": name = "Большая, версия 2"
+        case "large-v3": name = "Большая, версия 3"
+        case "large-v3-turbo": name = "Большая ускоренная, версия 3"
+        default: return model
+        }
+        let compressed = components.count > 1 ? ", сжатая (\(components[1].prefix(1)) бит)" : ""
+        return name + compressed + (englishOnly ? " — только английский" : "")
+    }
+
+    @objc private func showHelp() {
+        let config = Config.load()
+        let recordingInstructions = (config.toggleMode?.value ?? false)
+            ? "Нажмите \(config.hotkeySummary()), произнесите текст и нажмите эту клавишу ещё раз."
+            : "Удерживайте \(config.hotkeySummary()), произнесите текст и отпустите клавишу."
+        let alert = NSAlert()
+        alert.messageText = "Как пользоваться VoiceON"
+        alert.informativeText = """
+        1. При первом запуске разрешите доступ к микрофону и универсальному доступу в Системных настройках → Конфиденциальность и безопасность.
+
+        2. Поставьте курсор в поле, куда хотите ввести текст. \(recordingInstructions) Распознанный текст появится в этом поле.
+
+        3. Если вставка не сработала, выберите «Скопировать последний текст» в меню VoiceON и вставьте его клавишами ⌘+V.
+
+        Язык речи и микрофон можно выбрать в меню. При первом выборе модели дождитесь её загрузки. После загрузки распознавание работает на вашем Mac без интернета.
+        """
+        alert.addButton(withTitle: "Понятно")
+        alert.addButton(withTitle: "Руководство на русском")
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertSecondButtonReturn,
+           let url = URL(string: "https://github.com/rolexx671/VoiceON#readme") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     @objc private func reloadConfiguration() {

@@ -51,7 +51,7 @@ class AudioRecorder {
         else { useVoiceProcessing = false }
         let configured = try AudioCaptureUnit(route: route, voiceProcessing: useVoiceProcessing)
         capture = configured
-        print("Audio setup: \((DispatchTime.now().uptimeNanoseconds - startedAt) / 1_000_000) ms; input=\(route.inputDeviceID), output=\(route.outputDeviceID)")
+        print("Подготовка звука: \((DispatchTime.now().uptimeNanoseconds - startedAt) / 1_000_000) мс; вход=\(route.inputDeviceID), выход=\(route.outputDeviceID)")
         return configured
     }
 
@@ -63,7 +63,7 @@ class AudioRecorder {
                 let capture = try configuredCapture()
                 try capture.start(to: outputURL, requestedAt: requestedAt)
                 currentOutputURL = outputURL
-                print("Microphone ready in \((DispatchTime.now().uptimeNanoseconds - requestedAt) / 1_000_000) ms (voice processing: \(capture.voiceProcessing))")
+                print("Микрофон готов через \((DispatchTime.now().uptimeNanoseconds - requestedAt) / 1_000_000) мс (обработка голоса: \(capture.voiceProcessing))")
             } catch {
                 capture = nil
                 throw error
@@ -81,7 +81,7 @@ class AudioRecorder {
                 return url
             } catch {
                 try? FileManager.default.removeItem(at: url)
-                print("Recording failed: \(error.localizedDescription)")
+                print("Ошибка записи: \(error.localizedDescription)")
                 return nil
             }
         }

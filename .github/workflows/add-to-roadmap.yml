@@ -1,15 +1,12 @@
-name: Add to Roadmap
-
+name: Проверка метаданных форка
 on:
-  issues:
-    types: [labeled]
-
+  workflow_dispatch:
+permissions:
+  contents: read
 jobs:
-  add-to-roadmap:
-    if: github.event.label.name == 'roadmap'
+  metadata:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/add-to-project@v1.0.2
-        with:
-          project-url: https://github.com/users/human37/projects/2
-          github-token: ${{ secrets.PROJECT_TOKEN }}
+      - uses: actions/checkout@v4
+      - name: Проверка происхождения
+        run: test -s LICENSE && test -s Resources/ThirdPartyNotices.ru.txt

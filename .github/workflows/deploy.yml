@@ -1,25 +1,12 @@
-name: Deploy to Cloudflare Pages
-
+name: Проверка русской документации
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'index.html'
-      - 'demo.html'
-      - 'robots.txt'
-      - 'sitemap.xml'
-      - 'logo.svg'
-      - 'og.png'
-      - '_headers'
-      - 'llms.txt'
-
+  workflow_dispatch:
+permissions:
+  contents: read
 jobs:
-  deploy:
+  documentation:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy . --project-name=open-wispr
+      - name: Проверка обязательных документов
+        run: test -s README.md && test -s docs/install-guide.md && test -s LICENSE

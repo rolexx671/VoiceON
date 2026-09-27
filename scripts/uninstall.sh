@@ -1,48 +1,51 @@
 #!/bin/bash
 set -euo pipefail
 
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-DIM='\033[2m'
-BOLD='\033[1m'
-NC='\033[0m'
+if [ "$#" -gt 0 ]; then
+    printf '%s\n' 'Использование: bash scripts/uninstall.sh' 'Приложение VoiceON будет перемещено в Корзину после подтверждения.' 'Настройки, модели и история в ~/.config/voiceon сохраняются.'
+    case "$1" in --help|-h) exit 0 ;; *) exit 1 ;; esac
+fi
 
-step() { printf "\n  ${BLUE}${BOLD}%s${NC}\n" "$1"; }
-ok()   { printf "  ${GREEN}✓${NC} %s\n" "$1"; }
+apps=()
+for app in "$HOME/Applications/VoiceON.app" "/Applications/VoiceON.app"; do
+    if [ -d "$app" ] && [ ! -L "$app" ]; then
+        bundle_id=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Contents/Info.plist" 2>/dev/null || true)
+        if [ "$bundle_id" = "com.voiceon.app" ]; then
+            apps+=("$app")
+        else
+            printf 'Пропущено: %s — не удалось подтвердить, что это приложение VoiceON.\n' "$app"
+        fi
+    fi
+done
 
-printf "\n"
-printf "  ${BOLD}open-wispr${NC} ${DIM}— uninstall${NC}\n"
-printf "  ${DIM}────────────────────────────────────────────${NC}\n"
+if [ "${#apps[@]}" -eq 0 ]; then
+    printf '%s\n' 'Установленное приложение VoiceON не найдено.' 'Настройки и история сохранены.'
+    exit 0
+fi
 
-step "Stopping service"
-brew services stop open-wispr 2>/dev/null || true
-pkill -f "open-wispr start" 2>/dev/null || true
-sleep 1
-ok "Stopped"
+printf '%s\n' 'Сначала завершите VoiceON через значок в строке меню.' 'В Корзину будут перемещены:'
+printf '  %s\n' "${apps[@]}"
+printf '%s\n' 'Настройки, модели и история в ~/.config/voiceon сохранятся.'
+printf 'Для подтверждения введите УДАЛИТЬ: '
+confirmation=''
+if ! IFS= read -r confirmation || [ "$confirmation" != 'УДАЛИТЬ' ]; then
+    printf '%s\n' 'Удаление отменено.'
+    exit 0
+fi
 
-step "Removing formula and tap"
-brew uninstall --force open-wispr 2>/dev/null || true
-brew untap human37/open-wispr 2>/dev/null || true
-ok "Removed"
-
-step "Removing app bundle"
-rm -rf ~/Applications/OpenWispr.app
-rm -rf /Applications/OpenWispr.app 2>/dev/null || true
-ok "Removed"
-
-step "Removing config, model, and logs"
-rm -rf ~/.config/open-wispr
-rm -f /opt/homebrew/var/log/open-wispr.log 2>/dev/null || true
-ok "Removed"
-
-step "Unregistering from LaunchServices"
-/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister -u ~/Applications/OpenWispr.app 2>/dev/null || true
-ok "Unregistered"
-
-printf "\n"
-printf "  ${DIM}────────────────────────────────────────────${NC}\n"
-printf "  ${GREEN}${BOLD}Uninstalled.${NC}\n"
-printf "\n"
-printf "  To reinstall:\n"
-printf "  ${BOLD}curl -fsSL https://raw.githubusercontent.com/human37/open-wispr/main/scripts/install.sh | bash${NC}\n"
-printf "\n"
+mkdir -p "$HOME/.Trash"
+for app in "${apps[@]}"; do
+    trash_path="$HOME/.Trash/VoiceON-$(date +%Y%m%d-%H%M%S)-$$.app"
+    suffix=0
+    while [ -e "$trash_path" ]; do
+        suffix=$((suffix + 1))
+        trash_path="$HOME/.Trash/VoiceON-$(date +%Y%m%d-%H%M%S)-$$-$suffix.app"
+    done
+    if mv "$app" "$trash_path"; then
+        printf 'Перемещено в Корзину: %s\n' "$app"
+    else
+        printf 'Не удалось переместить %s. Закройте приложение и переместите его в Корзину через Finder.\n' "$app" >&2
+        exit 1
+    fi
+done
+printf '%s\n' 'VoiceON удалён. Настройки и история сохранены.' 'Чтобы восстановить приложение, верните его из Корзины или откройте VoiceON.dmg.'

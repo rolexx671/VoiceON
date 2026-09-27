@@ -9,7 +9,7 @@ public class Transcriber {
     public var spokenPunctuation: Bool = false
     public var customDictionary: [DictionaryEntry] = []
 
-    public init(modelSize: String = "base.en", language: String = "en", whisperPrompt: String? = nil,
+    public init(modelSize: String = "base", language: String = "ru", whisperPrompt: String? = nil,
                 vadEnabled: Bool = false, vadThreshold: Double = 0.5) {
         self.modelSize = modelSize
         self.language = language
@@ -114,6 +114,9 @@ public class Transcriber {
         "SOUND", "Sound", "sound",
         "NOISE", "Noise", "noise",
         "INAUDIBLE", "inaudible",
+        "Музыка", "музыка", "МУЗЫКА",
+        "Аплодисменты", "аплодисменты", "Смех", "смех",
+        "Тишина", "тишина", "Шум", "шум", "Неразборчиво", "неразборчиво",
     ]
 
     private static let markerRegex = try! NSRegularExpression(
@@ -138,6 +141,10 @@ public class Transcriber {
     }
 
     public static func findWhisperBinary() -> String? {
+        if let bundled = Bundle.main.url(forAuxiliaryExecutable: "whisper-cli"),
+           FileManager.default.isExecutableFile(atPath: bundled.path) {
+            return bundled.path
+        }
         let candidates = [
             "/opt/homebrew/bin/whisper-cli",
             "/usr/local/bin/whisper-cli",
@@ -146,7 +153,7 @@ public class Transcriber {
         ]
 
         for path in candidates {
-            if FileManager.default.fileExists(atPath: path) {
+            if FileManager.default.isExecutableFile(atPath: path) {
                 return path
             }
         }
@@ -178,6 +185,10 @@ public class Transcriber {
 
     static func findVADModel() -> String? {
         let name = ModelDownloader.vadModelFileName
+        if let bundled = Bundle.main.resourceURL?.appendingPathComponent("models/\(name)"),
+           ModelDownloader.isValidGGMLFile(at: bundled) {
+            return bundled.path
+        }
         let candidates = [
             Config.configDir.appendingPathComponent("models/\(name)").path,
             "/opt/homebrew/share/whisper-cpp/models/\(name)",
@@ -189,6 +200,11 @@ public class Transcriber {
     static func findModel(modelSize: String) -> String? {
         let modelFileName = "ggml-\(modelSize).bin"
 
+        if let bundled = Bundle.main.resourceURL?.appendingPathComponent("models/\(modelFileName)"),
+           ModelDownloader.isValidGGMLFile(at: bundled) {
+            return bundled.path
+        }
+
         let candidates = [
             "\(Config.configDir.path)/models/\(modelFileName)",
             "/opt/homebrew/share/whisper-cpp/models/\(modelFileName)",
@@ -197,7 +213,7 @@ public class Transcriber {
         ]
 
         for path in candidates {
-            if FileManager.default.fileExists(atPath: path) {
+            if ModelDownloader.isValidGGMLFile(at: URL(fileURLWithPath: path)) {
                 return path
             }
         }
@@ -215,13 +231,13 @@ enum TranscriberError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .whisperNotFound:
-            return "whisper-cpp not found. Install it with: brew install whisper-cpp"
+            return "Движок распознавания не найден. Установите VoiceON заново из образа VoiceON.dmg."
         case .modelNotFound(let size):
-            return "Whisper model '\(size)' not found. Download it with: open-wispr download-model \(size)"
+            return "Модель Whisper «\(size)» не найдена. Выберите её в меню «Модель» для загрузки или вернитесь к встроенной модели «Базовая»."
         case .vadModelNotFound:
-            return "Voice activity model not found. Restart OpenWispr to download it, or disable voiceActivityDetection in config.json."
+            return "Модель определения речи не найдена. Перезапустите VoiceON для загрузки или отключите определение речи в настройках."
         case .transcriptionFailed:
-            return "Transcription failed"
+            return "Не удалось распознать речь"
         }
     }
 }

@@ -10,7 +10,7 @@ enum AppBundleLaunch {
     }
 
     static func findOpenWisprAppBundle() -> URL? {
-        if let env = ProcessInfo.processInfo.environment["OPEN_WISPR_APP"]?.trimmingCharacters(in: .whitespacesAndNewlines), !env.isEmpty {
+        if let env = ProcessInfo.processInfo.environment["VOICEON_APP"]?.trimmingCharacters(in: .whitespacesAndNewlines), !env.isEmpty {
             let path = (env as NSString).expandingTildeInPath
             if FileManager.default.fileExists(atPath: path) {
                 return URL(fileURLWithPath: path, isDirectory: true)
@@ -20,7 +20,7 @@ enum AppBundleLaunch {
         let exec = URL(fileURLWithPath: ProcessInfo.processInfo.arguments[0]).resolvingSymlinksInPath()
         var dir = exec.deletingLastPathComponent()
         for _ in 0..<10 {
-            let candidate = dir.appendingPathComponent("OpenWispr.app", isDirectory: true)
+            let candidate = dir.appendingPathComponent("VoiceON.app", isDirectory: true)
             if FileManager.default.fileExists(atPath: candidate.path) {
                 return candidate
             }
@@ -30,9 +30,9 @@ enum AppBundleLaunch {
         }
 
         let home = FileManager.default.homeDirectoryForCurrentUser
-        let homeApps = home.appendingPathComponent("Applications/OpenWispr.app", isDirectory: true)
+        let homeApps = home.appendingPathComponent("Applications/VoiceON.app", isDirectory: true)
         if FileManager.default.fileExists(atPath: homeApps.path) { return homeApps }
-        let system = URL(fileURLWithPath: "/Applications/OpenWispr.app", isDirectory: true)
+        let system = URL(fileURLWithPath: "/Applications/VoiceON.app", isDirectory: true)
         if FileManager.default.fileExists(atPath: system.path) { return system }
         return nil
     }
@@ -43,13 +43,13 @@ enum AppBundleLaunch {
         if isExecutableInsideAppBundle(exec) { return false }
         guard let appURL = findOpenWisprAppBundle() else { return false }
 
-        let executableURL = appURL.appendingPathComponent("Contents/MacOS/open-wispr")
+        let executableURL = appURL.appendingPathComponent("Contents/MacOS/voiceon")
         guard FileManager.default.isExecutableFile(atPath: executableURL.path) else {
-            fputs("Error: app bundle executable not found at \(executableURL.path)\n", stderr)
+            fputs("Ошибка: исполняемый файл приложения не найден: \(executableURL.path)\n", stderr)
             return false
         }
 
-        fputs("Relaunching via \(appURL.path) so Microphone/Accessibility apply to OpenWispr, not Terminal.\n", stdout)
+        fputs("Перезапуск через \(appURL.path), чтобы разрешения микрофона и универсального доступа применялись к VoiceON.\n", stdout)
 
         let execError = executableURL.path.withCString { executable in
             "start".withCString { start in
@@ -66,7 +66,7 @@ enum AppBundleLaunch {
         }
 
         let message = String(cString: strerror(execError))
-        fputs("Error: could not start OpenWispr.app: \(message)\n", stderr)
+        fputs("Ошибка запуска VoiceON.app: \(message)\n", stderr)
         return false
     }
 }

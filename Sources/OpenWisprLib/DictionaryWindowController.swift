@@ -11,13 +11,13 @@ class DictionaryWindowController: NSWindowController, NSTableViewDataSource, NST
 
     private init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 350),
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 380),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false
         )
-        window.title = "Custom Dictionary"
-        window.minSize = NSSize(width: 350, height: 200)
+        window.title = "Пользовательский словарь VoiceON"
+        window.minSize = NSSize(width: 460, height: 240)
         window.center()
 
         super.init(window: window)
@@ -27,7 +27,7 @@ class DictionaryWindowController: NSWindowController, NSTableViewDataSource, NST
     }
 
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        fatalError("Инициализация init(coder:) не поддерживается")
     }
 
     func reload() {
@@ -63,7 +63,7 @@ class DictionaryWindowController: NSWindowController, NSTableViewDataSource, NST
         let contentView = NSView(frame: window.contentView!.bounds)
         contentView.autoresizingMask = [.width, .height]
 
-        let scrollView = NSScrollView(frame: NSRect(x: 0, y: 36, width: contentView.bounds.width, height: contentView.bounds.height - 36))
+        let scrollView = NSScrollView(frame: NSRect(x: 0, y: 70, width: contentView.bounds.width, height: contentView.bounds.height - 70))
         scrollView.autoresizingMask = [.width, .height]
         scrollView.hasVerticalScroller = true
         scrollView.borderType = .bezelBorder
@@ -75,14 +75,14 @@ class DictionaryWindowController: NSWindowController, NSTableViewDataSource, NST
         tableView.dataSource = self
 
         let fromColumn = NSTableColumn(identifier: fromColumnID)
-        fromColumn.title = "Whisper hears"
-        fromColumn.width = 180
+        fromColumn.title = "Распознано"
+        fromColumn.width = 260
         fromColumn.isEditable = true
         tableView.addTableColumn(fromColumn)
 
         let toColumn = NSTableColumn(identifier: toColumnID)
-        toColumn.title = "Should be"
-        toColumn.width = 180
+        toColumn.title = "Заменить на"
+        toColumn.width = 260
         toColumn.isEditable = true
         tableView.addTableColumn(toColumn)
 
@@ -92,6 +92,8 @@ class DictionaryWindowController: NSWindowController, NSTableViewDataSource, NST
         let addButton = NSButton(frame: NSRect(x: 8, y: 4, width: 24, height: 24))
         addButton.bezelStyle = .smallSquare
         addButton.title = "+"
+        addButton.toolTip = "Добавить замену"
+        addButton.setAccessibilityLabel("Добавить замену")
         addButton.target = self
         addButton.action = #selector(addEntry)
         contentView.addSubview(addButton)
@@ -99,9 +101,18 @@ class DictionaryWindowController: NSWindowController, NSTableViewDataSource, NST
         let removeButton = NSButton(frame: NSRect(x: 34, y: 4, width: 24, height: 24))
         removeButton.bezelStyle = .smallSquare
         removeButton.title = "-"
+        removeButton.toolTip = "Удалить выбранные замены"
+        removeButton.setAccessibilityLabel("Удалить выбранные замены")
         removeButton.target = self
         removeButton.action = #selector(removeEntry)
         contentView.addSubview(removeButton)
+
+        let hint = NSTextField(wrappingLabelWithString: "Дважды нажмите ячейку, чтобы изменить текст. Замены сохраняются автоматически.")
+        hint.frame = NSRect(x: 72, y: 4, width: contentView.bounds.width - 84, height: 56)
+        hint.autoresizingMask = [.width]
+        hint.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
+        hint.textColor = .secondaryLabelColor
+        contentView.addSubview(hint)
 
         window.contentView = contentView
     }

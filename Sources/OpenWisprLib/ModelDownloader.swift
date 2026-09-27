@@ -25,10 +25,10 @@ public class ModelDownloader: NSObject, URLSessionDownloadDelegate {
 
         if FileManager.default.fileExists(atPath: destPath.path) {
             if isValidGGMLFile(at: destPath) {
-                print("Model already exists at \(destPath.path)")
+                print("Модель уже существует: \(destPath.path)")
                 return
             }
-            throw ModelDownloadError.invalidModelData
+            // Повреждённый файл заменяется только после успешной новой загрузки.
         }
 
         try FileManager.default.createDirectory(at: modelsDir, withIntermediateDirectories: true)
@@ -37,7 +37,7 @@ public class ModelDownloader: NSObject, URLSessionDownloadDelegate {
             throw ModelDownloadError.downloadFailed
         }
 
-        print("Downloading \(modelFileName) from \(urlString)...")
+        print("Загрузка \(modelFileName) с \(urlString)…")
 
         let downloader = ModelDownloader()
         downloader.onProgress = onProgress
@@ -62,7 +62,7 @@ public class ModelDownloader: NSObject, URLSessionDownloadDelegate {
             throw error
         }
 
-        print("Model downloaded to \(destPath.path)")
+        print("Модель скачана: \(destPath.path)")
     }
 
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
@@ -76,15 +76,15 @@ public class ModelDownloader: NSObject, URLSessionDownloadDelegate {
                 return
             }
 
-            if FileManager.default.fileExists(atPath: destPath.path) {
-                try FileManager.default.removeItem(at: destPath)
-            }
-            try FileManager.default.moveItem(at: location, to: destPath)
-
-            if !ModelDownloader.isValidGGMLFile(at: destPath) {
-                try? FileManager.default.removeItem(at: destPath)
+            if !ModelDownloader.isValidGGMLFile(at: location) {
                 completion?(ModelDownloadError.invalidModelData)
                 return
+            }
+
+            if FileManager.default.fileExists(atPath: destPath.path) {
+                _ = try FileManager.default.replaceItemAt(destPath, withItemAt: location)
+            } else {
+                try FileManager.default.moveItem(at: location, to: destPath)
             }
 
             completion?(nil)
@@ -98,7 +98,7 @@ public class ModelDownloader: NSObject, URLSessionDownloadDelegate {
         defer { handle.closeFile() }
         guard let magic = try? handle.read(upToCount: 4), magic.count == 4 else { return false }
         // GGML magic: 0x67676d6c ("ggml"), GGJT magic: 0x67676a74 ("ggjt"), GGUF magic: 0x46554747 ("GGUF")
-        let magicU32 = magic.withUnsafeBytes { $0.load(as: UInt32.self) }
+        let magicU32 = magic.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self) }
         let knownMagics: Set<UInt32> = [0x67676d6c, 0x67676a74, 0x46554747]
         return knownMagics.contains(magicU32)
     }
@@ -124,11 +124,11 @@ public enum ModelDownloadError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .downloadFailed:
-            return "Failed to download model"
+            return "Не удалось скачать модель"
         case .httpError(let statusCode):
-            return "Download failed with HTTP status \(statusCode). Check your network connection or proxy settings."
+            return "Ошибка загрузки: код HTTP \(statusCode). Проверьте подключение к интернету и настройки прокси."
         case .invalidModelData:
-            return "Downloaded file is not a valid GGML model (possibly a proxy error page). Check your network connection or try downloading from a different network."
+            return "Скачанный файл не является моделью GGML (возможно, это страница ошибки прокси). Проверьте соединение или используйте другую сеть."
         }
     }
 }

@@ -112,23 +112,23 @@ final class KeyCodesTests: XCTestCase {
 
     func testDescribeSingleKey() {
         let name = KeyCodes.describe(keyCode: 63, modifiers: [])
-        XCTAssertTrue(name == "fn" || name == "globe", "Expected fn or globe, got \(name)")
+        XCTAssertEqual(name, "Fn (глобус)")
     }
 
     func testDescribeWithModifiers() {
         let desc = KeyCodes.describe(keyCode: 49, modifiers: ["cmd", "shift"])
-        XCTAssertEqual(desc, "cmd+shift+space")
+        XCTAssertEqual(desc, "⌘+⇧+Пробел")
     }
 
     func testDescribeUnknownKeyCode() {
         let desc = KeyCodes.describe(keyCode: 999, modifiers: [])
-        XCTAssertEqual(desc, "key(999)")
+        XCTAssertEqual(desc, "клавиша(999)")
     }
 
     // MARK: - parse + describe round-trip
 
     func testParseDescribeRoundTrip() {
-        let inputs = ["fn", "space", "f5", "escape"]
+        let inputs = ["fn", "space", "f5", "escape", "cmd+shift+space", "rightcmd", "rightoption"]
         for input in inputs {
             guard let parsed = KeyCodes.parse(input) else {
                 XCTFail("Failed to parse: \(input)")
@@ -137,6 +137,16 @@ final class KeyCodesTests: XCTestCase {
             let described = KeyCodes.describe(keyCode: parsed.keyCode, modifiers: parsed.modifiers)
             let reparsed = KeyCodes.parse(described)
             XCTAssertEqual(reparsed?.keyCode, parsed.keyCode, "Round-trip failed for: \(input)")
+            XCTAssertEqual(reparsed?.modifiers, parsed.modifiers, "Modifiers failed for: \(input)")
         }
+    }
+
+    func testParseRussianKeyNamesAndLayout() {
+        XCTAssertEqual(KeyCodes.parse("Пробел")?.keyCode, 49)
+        XCTAssertEqual(KeyCodes.parse("Ввод")?.keyCode, 36)
+        XCTAssertEqual(KeyCodes.parse("Глобус")?.keyCode, 63)
+        XCTAssertEqual(KeyCodes.parse("Контрол + Пробел")?.modifiers, ["ctrl"])
+        XCTAssertEqual(KeyCodes.parse("⌘ + ⇧ + ф")?.keyCode, 0)
+        XCTAssertEqual(KeyCodes.parse("⌘ + ⇧ + ф")?.modifiers, ["cmd", "shift"])
     }
 }

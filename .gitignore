@@ -9,3 +9,5 @@
 .vscode/
 docs/superpowers/
 .worktrees/
+dist/
+*.dmg

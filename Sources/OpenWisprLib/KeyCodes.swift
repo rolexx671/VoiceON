@@ -33,9 +33,42 @@ public struct KeyCodes {
         return result
     }()
 
+    private static let russianAliases: [String: String] = [
+        "пробел": "space", "ввод": "return", "табуляция": "tab",
+        "удалить": "delete", "удаление": "delete", "отмена": "escape",
+        "глобус": "globe", "fn (глобус)": "fn", "функция": "fn",
+        "команда": "cmd", "⌘": "cmd", "⇧": "shift", "⌥": "option", "⌃": "ctrl",
+        "шифт": "shift", "контрол": "ctrl", "альт": "alt",
+        "левая ⌘": "leftcmd", "правая ⌘": "rightcmd",
+        "левый ⇧": "leftshift", "правый ⇧": "rightshift",
+        "левый ⌥": "leftoption", "правый ⌥": "rightoption",
+        "левый ⌃": "leftctrl", "правый ⌃": "rightctrl",
+        "ф": "a", "ы": "s", "в": "d", "а": "f", "р": "h", "п": "g",
+        "я": "z", "ч": "x", "с": "c", "м": "v", "и": "b", "й": "q",
+        "ц": "w", "у": "e", "к": "r", "н": "y", "е": "t", "щ": "o",
+        "г": "u", "ш": "i", "з": "p", "д": "l", "о": "j", "л": "k",
+        "т": "n", "ь": "m", "х": "[", "ъ": "]", "ж": ";", "э": "'",
+        "б": ",", "ю": ".", "ё": "`",
+    ]
+
+    private static let displayNames: [UInt16: String] = [
+        36: "Ввод", 48: "Табуляция", 49: "Пробел", 51: "Удалить", 53: "Отмена",
+        54: "Правая ⌘", 55: "Левая ⌘", 56: "Левый ⇧", 58: "Левый ⌥",
+        59: "Левый ⌃", 60: "Правый ⇧", 61: "Правый ⌥", 62: "Правый ⌃",
+        63: "Fn (глобус)",
+    ]
+
+    private static let modifierDisplayNames: [String: String] = [
+        "cmd": "⌘", "command": "⌘", "shift": "⇧", "ctrl": "⌃", "control": "⌃",
+        "opt": "⌥", "option": "⌥", "alt": "⌥", "fn": "Fn", "globe": "Fn", "function": "Fn",
+    ]
+
     public static func parse(_ input: String) -> (keyCode: UInt16, modifiers: [String])? {
         let parts = input.lowercased().split(separator: "+", omittingEmptySubsequences: false)
-            .map { String($0).trimmingCharacters(in: .whitespaces) }
+            .map {
+                let value = String($0).trimmingCharacters(in: .whitespaces)
+                return russianAliases[value] ?? value
+            }
 
         guard let keyName = parts.last, let code = nameToCode[keyName] else {
             return nil
@@ -49,10 +82,11 @@ public struct KeyCodes {
     }
 
     public static func describe(keyCode: UInt16, modifiers: [String]) -> String {
-        let keyName = codeToName[keyCode] ?? "key(\(keyCode))"
+        let keyName = displayNames[keyCode] ?? codeToName[keyCode]?.uppercased() ?? "клавиша(\(keyCode))"
         if modifiers.isEmpty {
             return keyName
         }
-        return (modifiers + [keyName]).joined(separator: "+")
+        let displayedModifiers = modifiers.map { modifierDisplayNames[$0.lowercased()] ?? $0 }
+        return (displayedModifiers + [keyName]).joined(separator: "+")
     }
 }

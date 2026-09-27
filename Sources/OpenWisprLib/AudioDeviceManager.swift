@@ -46,11 +46,27 @@ class AudioDeviceManager {
             result.append(AudioInputDevice(
                 id: deviceID,
                 uid: getDeviceUID(deviceID: deviceID),
-                name: name,
+                name: localizedDeviceName(name),
                 isDefault: deviceID == defaultID
             ))
         }
         return result
+    }
+
+    static func localizedDeviceName(_ name: String) -> String {
+        switch name {
+        case "Built-in Microphone", "Internal Microphone": return "Встроенный микрофон"
+        case "Built-in Input": return "Встроенный аудиовход"
+        case "External Microphone": return "Внешний микрофон"
+        case "Headset Microphone": return "Микрофон гарнитуры"
+        case "USB Microphone": return "USB-микрофон"
+        default:
+            let suffix = " Microphone"
+            if name.hasSuffix(suffix) {
+                return "Микрофон \(name.dropLast(suffix.count))"
+            }
+            return name
+        }
     }
 
     static func getDefaultInputDeviceID() -> AudioDeviceID {

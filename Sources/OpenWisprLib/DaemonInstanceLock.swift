@@ -3,7 +3,7 @@ import Foundation
 
 public final class DaemonInstanceLock {
     public static let defaultLockURL = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent(".config/open-wispr/daemon.lock")
+        .appendingPathComponent(".config/voiceon/daemon.lock")
 
     private let fileDescriptor: Int32
 
